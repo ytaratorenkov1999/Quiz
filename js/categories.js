@@ -5,62 +5,62 @@ const THEMES = [
     {
         id: 'music',
         ru: { label: 'Музыка' },
-        en: { label: '' },
-        zh: { label: '' }
+        en: { label: 'Music' },
+        zh: { label: '音乐' }
     },
     {
         id: 'sport',
         ru: { label: 'Спорт' },
-        en: { label: '' },
-        zh: { label: '' }
+        en: { label: 'Sport' },
+        zh: { label: '体育' }
     },
     {
         id: 'travel_geography',
         ru: { label: 'Путешествия и география' },
-        en: { label: '' },
-        zh: { label: '' }
+        en: { label: 'Travel and geography' },
+        zh: { label: '旅行与地理' }
     },
     {
         id: 'cinema',
         ru: { label: 'Фильмы' },
-        en: { label: '' },
-        zh: { label: '' }
+        en: { label: 'Films' },
+        zh: { label: '电影' }
     },
     {
         id: 'true_or_false',
         ru: { label: 'Правда и миф' },
-        en: { label: '' },
-        zh: { label: '' }
+        en: { label: 'Truth and myth' },
+        zh: { label: '真相与神话' }
     },
     {
         id: 'science_technology_travel',
         ru: { label: 'Наука, природа и технологии' },
-        en: { label: '' },
-        zh: { label: '' }
+        en: { label: 'Science, nature, and technology' },
+        zh: { label: '科学、自然与技术' }
     },
     {
         id: 'animation_kids',
         ru: { label: 'Анимация и детский канал' },
-        en: { label: '' },
-        zh: { label: '' }
+        en: { label: "Animation and children's channel" },
+        zh: { label: '动画与儿童频道' }
     },
     {
         id: 'art',
         ru: { label: 'Искусство и культура' },
-        en: { label: '' },
-        zh: { label: '' }
+        en: { label: 'Art and culture' },
+        zh: { label: '艺术与文化' }
     },
     {
         id: 'history_literature_language',
         ru: { label: 'История, литература и язык' },
-        en: { label: '' },
-        zh: { label: '' }
+        en: { label: 'History, literature, and language' },
+        zh: { label: '历史、文学与语言' }
     },
     {
         id: 'kids',
         ru: { label: 'Для малышей 6+' },
-        en: { label: '' },
-        zh: { label: '' }
+        en: { label: 'For little ones' },
+        zh: { label: '幼儿频道' }
     }
 ];
 
