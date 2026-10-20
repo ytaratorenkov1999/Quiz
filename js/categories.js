@@ -3,34 +3,64 @@ const DEFAULT_CATEGORY_COLOR = '#4682B4';
 
 const THEMES = [
     {
-        id: 'kids',
-        ru: { label: 'Детские' },
-        en: { label: 'For Kids' },
-        zh: { label: '儿童' }
+        id: 'music',
+        ru: { label: 'Музыка' },
+        en: { label: '' },
+        zh: { label: '' }
     },
     {
         id: 'sport',
-        ru: { label: 'Спортивные' },
-        en: { label: 'Sports' },
-        zh: { label: '体育' }
+        ru: { label: 'Спорт' },
+        en: { label: '' },
+        zh: { label: '' }
     },
     {
-        id: 'art',
-        ru: { label: 'Искусство и музыка' },
-        en: { label: 'Art & Music' },
-        zh: { label: '艺术与音乐' }
+        id: 'travel_geography',
+        ru: { label: 'Путешествия и география' },
+        en: { label: '' },
+        zh: { label: '' }
     },
     {
         id: 'cinema',
-        ru: { label: 'Кино и мультфильмы' },
-        en: { label: 'Movies & Cartoons' },
-        zh: { label: '电影与动画' }
+        ru: { label: 'Фильмы' },
+        en: { label: '' },
+        zh: { label: '' }
     },
     {
-        id: 'knowledge',
-        ru: { label: 'Познавательные' },
-        en: { label: 'Knowledge' },
-        zh: { label: '知识' }
+        id: 'true_or_false',
+        ru: { label: 'Правда и миф' },
+        en: { label: '' },
+        zh: { label: '' }
+    },
+    {
+        id: 'science_technology_travel',
+        ru: { label: 'Наука, природа и технологии' },
+        en: { label: '' },
+        zh: { label: '' }
+    },
+    {
+        id: 'animation_kids',
+        ru: { label: 'Анимация и детский канал' },
+        en: { label: '' },
+        zh: { label: '' }
+    },
+    {
+        id: 'art',
+        ru: { label: 'Искусство и культура' },
+        en: { label: '' },
+        zh: { label: '' }
+    },
+    {
+        id: 'history_literature_language',
+        ru: { label: 'История, литература и язык' },
+        en: { label: '' },
+        zh: { label: '' }
+    },
+    {
+        id: 'kids',
+        ru: { label: 'Для малышей 6+' },
+        en: { label: '' },
+        zh: { label: '' }
     }
 ];
 
@@ -53,7 +83,7 @@ const CATEGORIES = [
         questions: 10,
         color: '#4682B4',
         isNew: false,
-        theme: ['art'],
+        theme: ['music'],
         ru: {
             title: 'Оркестр без секретов',
             description: 'Струнные, духовые, ударные инструменты и роль дирижера объясняются через простые задания.'
@@ -74,7 +104,7 @@ const CATEGORIES = [
         questions: 10,
         color: '#4682B4',
         isNew: false,
-        theme: ['cinema', 'kids'],
+        theme: ['cinema'],
         ru: {
             title: 'Кино по эмодзи',
             description: 'Расшифруйте название фильма по эмодзи.'
@@ -91,11 +121,11 @@ const CATEGORIES = [
     {
         key: 'heroes_russian_animation',
         icon: '🐻',
-        age: '16+',
+        age: '6+',
         questions: 10,
         color: '#4682B4',
         isNew: false,
-        theme: ['cinema', 'kids'],
+        theme: ['animation_kids'],
         ru: {
             title: 'Герои российской анимации',
             description: 'Угадайте героя по силуэту, характерному предмету, дому или другу.'
@@ -137,7 +167,7 @@ const CATEGORIES = [
         questions: 10,
         color: '#4682B4',
         isNew: false,
-        theme: ['cinema'],
+        theme: ['true_or_false'],
         ru: {
             title: 'Кино: правда или миф',
             description: 'Необычные факты о съемках, звуке, монтаже и кинотехнологиях.'
@@ -158,7 +188,7 @@ const CATEGORIES = [
         questions: 10,
         color: '#4682B4',
         isNew: false,
-        theme: ['knowledge'],
+        theme: ['history_literature_language'],
         ru: {
             title: 'Что было раньше?',
             description: 'Два открытия, произведения, события или предмета нужно расположить в правильном порядке. Простая механика с высокой повторяемостью.'
@@ -179,7 +209,7 @@ const CATEGORIES = [
         questions: 10,
         color: '#4682B4',
         isNew: false,
-        theme: ['knowledge', 'kids'],
+        theme: ['science_technology_travel'],
         ru: {
             title: 'Космос для начинающих',
             description: 'Планеты, спутники, звезды и космические аппараты объясняются через короткие вопросы и крупные иллюстрации.'
@@ -221,7 +251,7 @@ const CATEGORIES = [
         questions: 10,
         color: '#4682B4',
         isNew: false,
-        theme: ['knowledge', 'kids'],
+        theme: ['travel_geography'],
         ru: {
             title: 'Страна по контуру',
             description: 'Узнайте страну по силуэту.'
