@@ -228,8 +228,8 @@ class Dom {
 
 const THEME_KEY = 'quiz-theme';
 
-const THEME_ICONS = '<span class="theme-toggle__icon theme-toggle__moon" aria-hidden="true"></span>' +
-    '<span class="theme-toggle__icon theme-toggle__sun" aria-hidden="true"></span>';
+const THEME_ICONS = '<img class="theme-toggle__icon theme-toggle__moon" src="images/svg/moon.svg" alt="" aria-hidden="true">' +
+    '<img class="theme-toggle__icon theme-toggle__sun" src="images/svg/sun.svg" alt="" aria-hidden="true">';
 
 class Theme {
     static current() {

@@ -205,23 +205,12 @@ body {
     }
 }
 
+/* Иконки — обычные <img> из images/svg (CSS-маска не грузится при открытии сайта с диска, file://).
+   Цвет задан в самих файлах: солнце видно только в тёмной теме, луна — только в светлой */
 .theme-toggle__icon {
     display: block;
     width: 22px;
     height: 22px;
-    background-color: currentColor;
-    -webkit-mask: center / contain no-repeat;
-    mask: center / contain no-repeat;
-}
-
-.theme-toggle__sun {
-    -webkit-mask-image: url('../images/svg/sun.svg');
-    mask-image: url('../images/svg/sun.svg');
-}
-
-.theme-toggle__moon {
-    -webkit-mask-image: url('../images/svg/moon.svg');
-    mask-image: url('../images/svg/moon.svg');
 }
 
 .theme-toggle__moon {
