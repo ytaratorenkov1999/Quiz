@@ -836,7 +836,7 @@ body {
 
 .btn-primary.active {
     background: linear-gradient(90deg, var(--accent), var(--accent-2));
-    color: #0f172a;
+    color: #e4e6ea;
     cursor: pointer;
 }
 
