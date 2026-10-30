@@ -1,0 +1,361 @@
+html[data-theme="light"] {
+    --bg: #eef4fa;
+    --card: #ffffff;
+    --muted: #64748b;
+    --text: #0f172a;
+    --accent: #00b8c4;
+    --accent-2: #4682b4;
+    --ok: #059669;
+    --err: #dc2626;
+    --shadow: 0 10px 30px rgba(15, 40, 80, 0.08);
+
+    --light-accent-text: #0e7490;
+    --light-accent-bg: #e0f7f8;
+    --light-line: #dce6f0;
+    --light-line-strong: #cbd5e1;
+    --light-surface: #f5f8fb;
+    --light-hover: #f1f5f9;
+
+    /* Основные цвета светлой темы (как у кружков «Вопросов» и «Возраст»): плашки, круглые кнопки, заголовок и подзаголовок */
+    --light-main-bg: #e6f4f8;
+    --light-main-bg-strong: #d6eef4;
+    --light-main-line: #cdebf0;
+    --light-main-accent: #3aa7b9;
+    --light-main-text: #0e7490;
+    color-scheme: light;
+}
+
+html[data-theme="light"] body {
+    background: radial-gradient(1200px 800px at 20% -10%, #ffffff 0, transparent 60%),
+                radial-gradient(1000px 700px at 120% 50%, #cfe8f6 0, transparent 50%),
+                var(--bg);
+}
+
+/* ============================================
+   КРУГЛЫЕ КНОПКИ В ШАПКЕ
+   ============================================ */
+html[data-theme="light"] .exit-btn,
+html[data-theme="light"] .burger-btn,
+html[data-theme="light"] .theme-toggle,
+html[data-theme="light"] .language-selector__toggle {
+    background: var(--light-main-bg);
+    backdrop-filter: none;
+    border-color: var(--light-main-line);
+    color: var(--light-main-text);
+    box-shadow: 0 2px 8px rgba(14, 116, 144, 0.08);
+}
+
+html[data-theme="light"] .exit-btn:hover {
+    background: #fee2e2;
+    border-color: var(--err);
+    color: var(--err);
+}
+
+html[data-theme="light"] .burger-btn:hover,
+html[data-theme="light"] .burger-btn--active,
+html[data-theme="light"] .theme-toggle:hover,
+html[data-theme="light"] .language-selector__toggle:hover,
+html[data-theme="light"] .language-selector--open .language-selector__toggle {
+    background: var(--light-main-bg-strong);
+    border-color: var(--light-main-accent);
+    color: var(--light-main-text);
+}
+
+html[data-theme="light"] .burger-btn__line {
+    background: var(--light-main-text);
+}
+
+html[data-theme="light"] .burger-btn:hover .burger-btn__line,
+html[data-theme="light"] .burger-btn--active .burger-btn__line {
+    background: var(--light-main-accent);
+}
+
+/* В светлой теме показываем луну (включить тёмную) */
+html[data-theme="light"] .theme-toggle__moon {
+    display: block;
+}
+
+html[data-theme="light"] .theme-toggle__sun {
+    display: none;
+}
+
+/* ============================================
+   МЕНЮ ТЕМ И ВЫБОР ЯЗЫКА
+   ============================================ */
+html[data-theme="light"] .theme-drawer-overlay {
+    background: rgba(15, 23, 42, 0.35);
+}
+
+html[data-theme="light"] .theme-drawer {
+    border-right-color: var(--light-line);
+}
+
+html[data-theme="light"] .theme-drawer__close {
+    background: var(--light-surface);
+    border-color: var(--light-line);
+}
+
+html[data-theme="light"] .theme-drawer__close:hover {
+    background: #fee2e2;
+    border-color: var(--err);
+}
+
+html[data-theme="light"] .theme-drawer__item:hover,
+html[data-theme="light"] .language-option:hover {
+    background: var(--light-hover);
+}
+
+html[data-theme="light"] .theme-drawer__item--active,
+html[data-theme="light"] .language-option--active {
+    background: var(--light-accent-bg);
+    color: var(--light-accent-text);
+}
+
+html[data-theme="light"] .language-selector__dropdown {
+    border-color: var(--light-line);
+}
+
+html[data-theme="light"] .language-option__code {
+    color: #94a3b8;
+}
+
+html[data-theme="light"] .language-option--active .language-option__code,
+html[data-theme="light"] .language-option__check {
+    color: var(--light-accent-text);
+}
+
+/* ============================================
+   ГЛАВНЫЙ ЭКРАН
+   ============================================ */
+html[data-theme="light"] .main-title {
+    background: linear-gradient(
+        to bottom,
+        var(--light-main-text) 50%,
+        rgba(58, 167, 185, 0.6) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    text-shadow: none;
+}
+
+html[data-theme="light"] .subtitle {
+    background: linear-gradient(
+        to bottom,
+        var(--light-main-text) 50%,
+        rgba(58, 167, 185, 0.7) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+html[data-theme="light"] .category-btn {
+    background: var(--light-main-bg);
+    backdrop-filter: none;
+    border-color: var(--light-main-line);
+    /* Без цветной верхней полосы: верхняя граница как остальные. Её цвет app.js пишет
+       в inline-style плашки (color из categories.js), поэтому перекрыть можно только через !important */
+    border-top-width: 1px;
+    border-top-color: var(--light-main-line) !important;
+    box-shadow: 0 10px 30px rgba(14, 116, 144, 0.07);
+}
+
+html[data-theme="light"] .category-btn::before {
+    background: linear-gradient(135deg, #f0f9fb, var(--light-main-bg));
+}
+
+html[data-theme="light"] .category-btn__title {
+    color: var(--light-main-text);
+}
+
+html[data-theme="light"] .category-btn:hover {
+    border-color: var(--light-main-accent);
+    border-top-color: var(--light-main-accent) !important;
+    box-shadow: 0 14px 32px rgba(14, 116, 144, 0.14);
+}
+
+html[data-theme="light"] .category-btn__difficulty {
+    color: var(--muted);
+}
+
+html[data-theme="light"] .category-btn__divider,
+html[data-theme="light"] .category-info-divider {
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(15, 23, 42, 0.12) 20%,
+        rgba(15, 23, 42, 0.12) 80%,
+        transparent);
+}
+
+html[data-theme="light"] .new-badge {
+    background-color: #ccf5f7;
+    color: var(--light-accent-text);
+}
+
+/* ============================================
+   КАРТОЧКИ ЭКРАНОВ
+   ============================================ */
+html[data-theme="light"] .category-info-content,
+html[data-theme="light"] #quiz-screen,
+html[data-theme="light"] #results-screen,
+html[data-theme="light"] .modal-content {
+    background: #ffffff;
+    backdrop-filter: none;
+    border-color: var(--light-line);
+}
+
+html[data-theme="light"] .info-stat-value {
+    color: var(--light-accent-text);
+}
+
+html[data-theme="light"] .info-stat-circle {
+    background: var(--light-main-bg);
+    color: var(--light-main-text);
+    border-color: var(--light-main-line);
+    box-shadow: none;
+}
+
+/* ============================================
+   ЭКРАН ВИКТОРИНЫ
+   ============================================ */
+html[data-theme="light"] .progress-bar {
+    background: #e2e8f0;
+}
+
+html[data-theme="light"] .question-image {
+    border-color: rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme="light"] .question-image-placeholder {
+    background: var(--light-hover);
+}
+
+html[data-theme="light"] .placeholder-spinner {
+    border-color: rgba(15, 23, 42, 0.1);
+    border-top-color: var(--accent);
+}
+
+html[data-theme="light"] .answer-btn {
+    background: var(--light-surface);
+    border-color: var(--light-line);
+}
+
+html[data-theme="light"] .answer-btn:hover:not(.disabled) {
+    background: #eef6fa;
+    border-color: var(--light-main-accent);
+}
+
+html[data-theme="light"] .answer-btn::before {
+    background: var(--light-main-accent);
+}
+
+html[data-theme="light"] .answer-btn.selected {
+    background: var(--light-main-bg);
+    color: var(--light-main-text);
+    border-color: var(--light-main-accent);
+}
+
+/* ============================================
+   КНОПКИ
+   ============================================ */
+html[data-theme="light"] .btn-primary {
+    background: #e2e8f0;
+    color: #94a3b8;
+    border-color: transparent;
+}
+
+/* Активная основная кнопка — на тон темнее выбранного ответа, в той же основной палитре */
+html[data-theme="light"] .btn-primary.active {
+    background: var(--light-main-bg-strong);
+    color: var(--light-main-text);
+    border-color: var(--light-main-accent);
+}
+
+html[data-theme="light"] .btn-primary.active:hover {
+    background: #c6e6ee;
+}
+
+html[data-theme="light"] .btn-back,
+html[data-theme="light"] .btn-secondary {
+    background: #ffffff;
+    color: var(--text);
+    border-color: var(--light-line-strong);
+}
+
+html[data-theme="light"] .btn-back:hover {
+    background: var(--light-hover);
+    border-color: var(--accent);
+}
+
+html[data-theme="light"] .btn-secondary:hover {
+    background: var(--light-hover);
+    border-color: #94a3b8;
+}
+
+/* ============================================
+   ЭКРАН РЕЗУЛЬТАТОВ
+   ============================================ */
+html[data-theme="light"] .stat-card {
+    background: var(--light-surface);
+    border-color: var(--light-line);
+}
+
+html[data-theme="light"] .stat-card:hover {
+    box-shadow: 0 12px 24px rgba(15, 40, 80, 0.1);
+}
+
+html[data-theme="light"] .results-details {
+    background: #f8fafc;
+    border-color: var(--light-line);
+}
+
+html[data-theme="light"] .results-questions-list::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.05);
+}
+
+html[data-theme="light"] .results-questions-list::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.2);
+}
+
+html[data-theme="light"] .results-questions-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(15, 23, 42, 0.3);
+}
+
+html[data-theme="light"] .results-question-item {
+    background: #ffffff;
+    border-color: var(--light-line);
+}
+
+html[data-theme="light"] .results-question-item:hover {
+    background: #f8fafc;
+}
+
+html[data-theme="light"] .question-header {
+    border-bottom-color: var(--light-line);
+}
+
+html[data-theme="light"] .question-status.correct {
+    background: rgba(16, 185, 129, 0.12);
+}
+
+html[data-theme="light"] .question-status.incorrect {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+html[data-theme="light"] .answer-row {
+    background: var(--light-hover);
+}
+
+html[data-theme="light"] .correct-answer {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+html[data-theme="light"] .explanation-row {
+    background: rgba(0, 184, 196, 0.1);
+}
+
+/* ============================================
+   МОДАЛЬНОЕ ОКНО ВЫХОДА
+   ============================================ */
+html[data-theme="light"] .modal {
+    background: rgba(15, 23, 42, 0.45);
+}

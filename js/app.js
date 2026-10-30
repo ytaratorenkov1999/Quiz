@@ -1,3 +1,73 @@
+const CONFIG = {
+    // true — кнопка смены темы видна и тему можно менять; false — кнопки нет, сайт всегда тёмный
+    themeSwitcher: true
+};
+
+const THEME_KEY = 'quiz-theme';
+
+
+const THEME_ICONS = '<span class="theme-toggle__icon theme-toggle__moon" aria-hidden="true"></span>' +
+    '<span class="theme-toggle__icon theme-toggle__sun" aria-hidden="true"></span>';
+
+// Тёмная тема — основная (стили в style.css), светлая включается атрибутом <html data-theme="light"> (style_light.css)
+class Theme {
+    static current() {
+        if (!CONFIG.themeSwitcher) return 'dark';
+        try {
+            return localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark';
+        } catch (e) {
+            return 'dark';
+        }
+    }
+
+    static apply(theme) {
+        const root = document.documentElement;
+
+        root.classList.add('theme-switching');
+        if (theme === 'light') root.setAttribute('data-theme', 'light');
+        else root.removeAttribute('data-theme');
+        Theme.updateButton();
+        void root.offsetWidth;
+        setTimeout(() => root.classList.remove('theme-switching'), 50);
+    }
+
+    static toggle() {
+        const theme = Theme.current() === 'light' ? 'dark' : 'light';
+        try {
+            localStorage.setItem(THEME_KEY, theme);
+        } catch (e) {}
+        Theme.apply(theme);
+    }
+
+    static renderButton() {
+        if (!CONFIG.themeSwitcher) return;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'theme-toggle';
+        button.id = 'theme-toggle';
+        button.innerHTML = THEME_ICONS;
+        button.addEventListener('click', Theme.toggle);
+        document.body.prepend(button);
+        Theme.updateButton();
+    }
+
+    static updateButton() {
+        const button = document.getElementById('theme-toggle');
+        if (!button) return;
+        const light = Theme.current() === 'light';
+        button.setAttribute('aria-pressed', String(light));
+        button.setAttribute('aria-label', t(light ? 'themeDark' : 'themeLight'));
+    }
+
+    static init() {
+        Theme.apply(Theme.current());
+        window.addEventListener('pageshow', () => Theme.apply(Theme.current()));
+        window.addEventListener('storage', (e) => {
+            if (e.key === THEME_KEY) Theme.apply(Theme.current());
+        });
+    }
+}
+
 const LANGUAGES = [
     { code: 'ru', name: 'Русский', url: 'index_ru.html' },
     { code: 'en', name: 'English', url: 'index_en.html' },
@@ -54,7 +124,9 @@ const UI_STRINGS = {
         quizProgressAriaLabel: 'Прогресс викторины',
         answerOptionsAriaLabel: 'Варианты ответов',
         selectCategoryAriaLabel: 'Выбрать категорию {title}',
-        newBadge: 'Новинка'
+        newBadge: 'Новинка',
+        themeDark: 'Включить тёмную тему',
+        themeLight: 'Включить светлую тему'
     },
     en: {
         mainTitle: 'QUIZZES',
@@ -104,7 +176,9 @@ const UI_STRINGS = {
         quizProgressAriaLabel: 'Quiz progress',
         answerOptionsAriaLabel: 'Answer options',
         selectCategoryAriaLabel: 'Select category {title}',
-        newBadge: 'New'
+        newBadge: 'New',
+        themeDark: 'Switch to dark theme',
+        themeLight: 'Switch to light theme'
     },
     zh: {
         mainTitle: '知识问答',
@@ -154,7 +228,9 @@ const UI_STRINGS = {
         quizProgressAriaLabel: '问答进度',
         answerOptionsAriaLabel: '答案选项',
         selectCategoryAriaLabel: '选择分类 {title}',
-        newBadge: '新'
+        newBadge: '新',
+        themeDark: '切换到深色模式',
+        themeLight: '切换到浅色模式'
     }
 };
 
@@ -272,6 +348,8 @@ class QuizApp {
         this.resultsQuestionsList = this.getElement('results-questions-list');
 
         this.exitBtn = this.getElement('exit-btn');
+        // Кнопки темы может не быть (CONFIG.themeSwitcher = false), поэтому без предупреждения getElement
+        this.themeToggle = document.getElementById('theme-toggle');
 
         this.exitModal = this.getElement('exit-modal');
         this.exitConfirm = this.getElement('exit-confirm');
@@ -1141,6 +1219,10 @@ class QuizApp {
                 this.closeThemeDrawer();
             }
         }
+
+        if (this.themeToggle) {
+            this.themeToggle.classList.toggle('theme-toggle--hidden', !shouldShow);
+        }
     }
 
     safeSetText(element, text) {
@@ -1158,8 +1240,10 @@ class QuizApp {
     }
 }
 
+Theme.init();
 document.addEventListener('DOMContentLoaded', () => {
     try {
+        Theme.renderButton();
         new QuizApp();
     } catch (error) {
         console.error('Критическая ошибка инициализации приложения:', error);

@@ -192,6 +192,91 @@ body {
 }
 
 /* ============================================
+   КНОПКА СМЕНЫ ТЕМЫ (справа от бургера, создаётся в app.js при CONFIG.themeSwitcher = true)
+   ============================================ */
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    left: 80px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: var(--text);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.theme-toggle:hover {
+    background: rgba(0, 206, 209, 0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: rotate(-20deg);
+}
+
+/* Иконки из images/svg подключены маской: так они красятся цветом кнопки (color) в обеих темах и при наведении */
+.theme-toggle__icon {
+    display: block;
+    width: 22px;
+    height: 22px;
+    background-color: currentColor;
+    -webkit-mask: center / contain no-repeat;
+    mask: center / contain no-repeat;
+}
+
+.theme-toggle__sun {
+    -webkit-mask-image: url('../images/svg/sun.svg');
+    mask-image: url('../images/svg/sun.svg');
+}
+
+.theme-toggle__moon {
+    -webkit-mask-image: url('../images/svg/moon.svg');
+    mask-image: url('../images/svg/moon.svg');
+}
+
+/* В тёмной теме показываем солнце (включить светлую) */
+.theme-toggle__moon {
+    display: none;
+}
+
+.theme-toggle--hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Пока меняется тема (класс ставит Theme.apply в app.js), все цвета переключаются сразу, без transition */
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+    transition: none !important;
+}
+
+@media (max-width: 480px) {
+    .theme-toggle {
+        width: 44px;
+        height: 44px;
+        top: 12px;
+        left: 64px;
+    }
+}
+
+@media (max-width: 360px) {
+    .theme-toggle {
+        width: 40px;
+        height: 40px;
+        top: 10px;
+        left: 58px;
+    }
+}
+
+/* ============================================
    ВЫДВИЖНОЕ МЕНЮ ВЫБОРА ТЕМЫ
    ============================================ */
 .theme-drawer-overlay {
@@ -727,9 +812,7 @@ body {
     border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Отдельный слой для текста вопроса: iOS Safari при смене вопроса перерисовывал
-   заголовок не целиком (часть строки пропадала до поворота экрана). У своего слоя
-   при изменении текста перерисовывается вся область */
+
 .question {
     font-size: 1.6em;
     margin-bottom: 32px;
