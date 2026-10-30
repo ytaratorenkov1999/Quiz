@@ -16,7 +16,6 @@ html[data-theme="light"] {
     --light-surface: #f5f8fb;
     --light-hover: #f1f5f9;
 
-    /* Основные цвета светлой темы (как у кружков «Вопросов» и «Возраст»): плашки, круглые кнопки, заголовок и подзаголовок */
     --light-main-bg: #e6f4f8;
     --light-main-bg-strong: #d6eef4;
     --light-main-line: #cdebf0;
@@ -31,9 +30,6 @@ html[data-theme="light"] body {
                 var(--bg);
 }
 
-/* ============================================
-   КРУГЛЫЕ КНОПКИ В ШАПКЕ
-   ============================================ */
 html[data-theme="light"] .exit-btn,
 html[data-theme="light"] .burger-btn,
 html[data-theme="light"] .theme-toggle,
@@ -69,7 +65,6 @@ html[data-theme="light"] .burger-btn--active .burger-btn__line {
     background: var(--light-main-accent);
 }
 
-/* Как в style.css: подсветка кнопки темы только для мыши, на телефоне она залипает после нажатия */
 @media (hover: hover) {
     html[data-theme="light"] .theme-toggle:hover {
         background: var(--light-main-bg-strong);
@@ -78,7 +73,6 @@ html[data-theme="light"] .burger-btn--active .burger-btn__line {
     }
 }
 
-/* В светлой теме показываем луну (включить тёмную) */
 html[data-theme="light"] .theme-toggle__moon {
     display: block;
 }
@@ -87,9 +81,6 @@ html[data-theme="light"] .theme-toggle__sun {
     display: none;
 }
 
-/* ============================================
-   МЕНЮ ТЕМ И ВЫБОР ЯЗЫКА
-   ============================================ */
 html[data-theme="light"] .theme-drawer-overlay {
     background: rgba(15, 23, 42, 0.35);
 }
@@ -132,9 +123,6 @@ html[data-theme="light"] .language-option__check {
     color: var(--light-accent-text);
 }
 
-/* ============================================
-   ГЛАВНЫЙ ЭКРАН
-   ============================================ */
 html[data-theme="light"] .main-title {
     background: linear-gradient(
         to bottom,
@@ -160,8 +148,7 @@ html[data-theme="light"] .category-btn {
     background: var(--light-main-bg);
     backdrop-filter: none;
     border-color: var(--light-main-line);
-    /* Без цветной верхней полосы: верхняя граница как остальные. Её цвет app.js пишет
-       в inline-style плашки (color из categories.js), поэтому перекрыть можно только через !important */
+
     border-top-width: 1px;
     border-top-color: var(--light-main-line) !important;
     box-shadow: 0 10px 30px rgba(14, 116, 144, 0.07);
@@ -199,9 +186,6 @@ html[data-theme="light"] .new-badge {
     color: var(--light-accent-text);
 }
 
-/* ============================================
-   КАРТОЧКИ ЭКРАНОВ
-   ============================================ */
 html[data-theme="light"] .category-info-content,
 html[data-theme="light"] #quiz-screen,
 html[data-theme="light"] #results-screen,
@@ -222,9 +206,6 @@ html[data-theme="light"] .info-stat-circle {
     box-shadow: none;
 }
 
-/* ============================================
-   ЭКРАН ВИКТОРИНЫ
-   ============================================ */
 html[data-theme="light"] .progress-bar {
     background: #e2e8f0;
 }
@@ -262,16 +243,12 @@ html[data-theme="light"] .answer-btn.selected {
     border-color: var(--light-main-accent);
 }
 
-/* ============================================
-   КНОПКИ
-   ============================================ */
 html[data-theme="light"] .btn-primary {
     background: #e2e8f0;
     color: #94a3b8;
     border-color: transparent;
 }
 
-/* Активная основная кнопка — на тон темнее выбранного ответа, в той же основной палитре */
 html[data-theme="light"] .btn-primary.active {
     background: var(--light-main-bg-strong);
     color: var(--light-main-text);
@@ -299,15 +276,11 @@ html[data-theme="light"] .btn-secondary:hover {
     border-color: #94a3b8;
 }
 
-/* ============================================
-   ЭКРАН РЕЗУЛЬТАТОВ
-   ============================================ */
 html[data-theme="light"] .stat-card {
     background: var(--light-surface);
     border-color: var(--light-line);
 }
 
-/* Иконки статистики: размеры общие в style.css, здесь только бледные подложки под светлый фон */
 html[data-theme="light"] .stat-card-score .stat-card-icon {
     background: #fef3c7;
 }
@@ -345,7 +318,6 @@ html[data-theme="light"] .results-questions-list::-webkit-scrollbar-thumb:hover 
     background: rgba(15, 23, 42, 0.3);
 }
 
-/* Линии между вопросами разбора (раскладка в style.css) */
 html[data-theme="light"] .results-question-item {
     border-bottom-color: var(--light-line);
 }
@@ -370,9 +342,6 @@ html[data-theme="light"] .explanation-row {
     background: rgba(0, 184, 196, 0.1);
 }
 
-/* ============================================
-   МОДАЛЬНОЕ ОКНО ВЫХОДА
-   ============================================ */
 html[data-theme="light"] .modal {
     background: rgba(15, 23, 42, 0.45);
 }

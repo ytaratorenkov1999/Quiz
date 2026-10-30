@@ -1,72 +1,7 @@
 const CONFIG = {
-    // true — кнопка смены темы видна и тему можно менять; false — кнопки нет, сайт всегда тёмный
-    themeSwitcher: true
+    themeSwitcher: false,
+    portalUrl: '/'
 };
-
-const THEME_KEY = 'quiz-theme';
-
-
-const THEME_ICONS = '<span class="theme-toggle__icon theme-toggle__moon" aria-hidden="true"></span>' +
-    '<span class="theme-toggle__icon theme-toggle__sun" aria-hidden="true"></span>';
-
-// Тёмная тема — основная (стили в style.css), светлая включается атрибутом <html data-theme="light"> (style_light.css)
-class Theme {
-    static current() {
-        if (!CONFIG.themeSwitcher) return 'dark';
-        try {
-            return localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark';
-        } catch (e) {
-            return 'dark';
-        }
-    }
-
-    static apply(theme) {
-        const root = document.documentElement;
-
-        root.classList.add('theme-switching');
-        if (theme === 'light') root.setAttribute('data-theme', 'light');
-        else root.removeAttribute('data-theme');
-        Theme.updateButton();
-        void root.offsetWidth;
-        setTimeout(() => root.classList.remove('theme-switching'), 50);
-    }
-
-    static toggle() {
-        const theme = Theme.current() === 'light' ? 'dark' : 'light';
-        try {
-            localStorage.setItem(THEME_KEY, theme);
-        } catch (e) {}
-        Theme.apply(theme);
-    }
-
-    static renderButton() {
-        if (!CONFIG.themeSwitcher) return;
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'theme-toggle';
-        button.id = 'theme-toggle';
-        button.innerHTML = THEME_ICONS;
-        button.addEventListener('click', Theme.toggle);
-        document.body.prepend(button);
-        Theme.updateButton();
-    }
-
-    static updateButton() {
-        const button = document.getElementById('theme-toggle');
-        if (!button) return;
-        const light = Theme.current() === 'light';
-        button.setAttribute('aria-pressed', String(light));
-        button.setAttribute('aria-label', t(light ? 'themeDark' : 'themeLight'));
-    }
-
-    static init() {
-        Theme.apply(Theme.current());
-        window.addEventListener('pageshow', () => Theme.apply(Theme.current()));
-        window.addEventListener('storage', (e) => {
-            if (e.key === THEME_KEY) Theme.apply(Theme.current());
-        });
-    }
-}
 
 const LANGUAGES = [
     { code: 'ru', name: 'Русский', url: 'index_ru.html' },
@@ -74,9 +9,9 @@ const LANGUAGES = [
     { code: 'zh', name: '中文', url: 'index_zh.html' }
 ];
 
-
 const UI_STRINGS = {
     ru: {
+        pageTitle: 'Quiz',
         mainTitle: 'ВИКТОРИНЫ',
         subtitle: 'Проверьте свои знания в полете!',
         chooseCategory: 'Выберите категорию',
@@ -129,6 +64,7 @@ const UI_STRINGS = {
         themeLight: 'Включить светлую тему'
     },
     en: {
+        pageTitle: 'Quiz',
         mainTitle: 'QUIZZES',
         subtitle: 'Test your knowledge in flight!',
         chooseCategory: 'Choose a category',
@@ -181,6 +117,7 @@ const UI_STRINGS = {
         themeLight: 'Switch to light theme'
     },
     zh: {
+        pageTitle: 'Quiz',
         mainTitle: '知识问答',
         subtitle: '在飞行途中检验你的知识！',
         chooseCategory: '选择分类',
@@ -234,129 +171,43 @@ const UI_STRINGS = {
     }
 };
 
-
 const CURRENT_LANGUAGE_CODE = window.CURRENT_LANGUAGE_CODE || 'ru';
 
-function t(key, params) {
-    const dict = UI_STRINGS[CURRENT_LANGUAGE_CODE] || {};
-    let str;
+class Translations {
 
-    if (dict[key] !== undefined && dict[key] !== '') {
-        str = dict[key];
-    } else {
-        console.warn(`Перевод не найден: ключ "${key}" отсутствует для языка "${CURRENT_LANGUAGE_CODE}"`);
-        str = '';
+    static get(key, params) {
+        const dict = UI_STRINGS[CURRENT_LANGUAGE_CODE] || {};
+        let str;
+
+        if (dict[key] !== undefined && dict[key] !== '') {
+            str = dict[key];
+        } else {
+            console.warn(`Перевод не найден: ключ "${key}" отсутствует для языка "${CURRENT_LANGUAGE_CODE}"`);
+            str = '';
+        }
+
+        if (params) {
+            Object.keys(params).forEach(paramKey => {
+                str = str.replace(`{${paramKey}}`, params[paramKey]);
+            });
+        }
+
+        return str;
     }
 
-    if (params) {
-        Object.keys(params).forEach(paramKey => {
-            str = str.replace(`{${paramKey}}`, params[paramKey]);
+    static applyToPage() {
+        document.title = Translations.get('pageTitle');
+        document.querySelectorAll('[data-text]').forEach(el => {
+            el.textContent = Translations.get(el.dataset.text);
+        });
+        document.querySelectorAll('[data-label]').forEach(el => {
+            el.setAttribute('aria-label', Translations.get(el.dataset.label));
         });
     }
-
-    return str;
 }
 
-class QuizApp {
-    constructor() {
-        this.currentCategory = null;
-        this.questions = [];
-        this.currentQuestionIndex = 0;
-        this.score = 0;
-        this.correctAnswers = 0;
-        this.questionHistory = [];
-        this.selectedAnswers = {};
-        this.confirmedAnswers = new Set();
-        this.portalUrl = '/';
-
-        this.currentLanguage = null;
-        this.isLanguageDropdownOpen = false;
-
-        this.selectedThemeId = 'all';
-        this.isThemeDrawerOpen = false;
-
-        this.init();
-    }
-
-    init() {
-        try {
-            this.cacheElements();
-            this.applyUIStrings();
-            this.renderThemeMenu();
-            this.renderCategoryButtons();
-            this.initLanguageSelector();
-            this.attachEventListeners();
-            this.updateLanguageSelectorVisibility();
-            this.validateQuestionsDatabase();
-        } catch (error) {
-            this.handleError('Ошибка инициализации приложения', error);
-        }
-    }
-
-    applyUIStrings() {
-        try {
-            document.title = t('mainTitle');
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                el.textContent = t(key);
-            });
-            document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
-                const key = el.getAttribute('data-i18n-aria-label');
-                el.setAttribute('aria-label', t(key));
-            });
-        } catch (error) {
-            this.handleError('Ошибка применения переводов интерфейса', error);
-        }
-    }
-
-    cacheElements() {
-        this.categoriesContainer = this.getElement('categories-container');
-        this.burgerBtn = this.getElement('burger-btn');
-        this.themeDrawer = this.getElement('theme-drawer');
-        this.themeDrawerOverlay = this.getElement('theme-drawer-overlay');
-        this.themeDrawerClose = this.getElement('theme-drawer-close');
-        this.themeDrawerList = this.getElement('theme-drawer-list');
-        this.languageSelectorRoot = this.getElement('language-selector');
-        this.languageSelectorToggle = this.getElement('language-selector-toggle');
-        this.languageSelectorDropdown = this.getElement('language-selector-dropdown');
-        this.welcomeScreen = this.getElement('welcome-screen');
-        this.categoryInfoScreen = this.getElement('category-info-screen');
-        this.quizScreen = this.getElement('quiz-screen');
-        this.resultsScreen = this.getElement('results-screen');
-        this.categoryInfoIcon = this.getElement('category-info-icon');
-        this.categoryInfoTitle = this.getElement('category-info-title');
-        this.categoryInfoDescription = this.getElement('category-info-description');
-        this.categoryInfoQuestions = this.getElement('category-info-questions');
-        this.categoryInfoAge = this.getElement('category-info-age');
-        this.categoryInfoBack = this.getElement('category-info-back');
-        this.categoryInfoStart = this.getElement('category-info-start');
-        this.questionText = this.getElement('question-text');
-        this.questionImageContainer = this.getElement('question-image-container');
-        this.answersContainer = this.getElement('answers-container');
-        this.currentQuestionSpan = this.getElement('current-question');
-        this.totalQuestionsSpan = this.getElement('total-questions');
-        this.progressFill = this.getElement('progress-fill');
-        this.nextBtn = this.getElement('next-btn');
-        this.backBtn = this.getElement('back-btn');
-        this.resultsIcon = this.getElement('results-icon');
-        this.resultsTitle = this.getElement('results-title');
-        this.finalScoreSpan = this.getElement('final-score');
-        this.correctCountSpan = this.getElement('correct-count');
-        this.incorrectCountSpan = this.getElement('incorrect-count');
-        this.resultsMessage = this.getElement('results-message');
-        this.percentageSpan = this.getElement('percentage');
-        this.resultsQuestionsList = this.getElement('results-questions-list');
-
-        this.exitBtn = this.getElement('exit-btn');
-        // Кнопки темы может не быть (CONFIG.themeSwitcher = false), поэтому без предупреждения getElement
-        this.themeToggle = document.getElementById('theme-toggle');
-
-        this.exitModal = this.getElement('exit-modal');
-        this.exitConfirm = this.getElement('exit-confirm');
-        this.exitCancel = this.getElement('exit-cancel');
-    }
-
-    getElement(id) {
+class Dom {
+    static get(id) {
         const element = document.getElementById(id);
         if (!element) {
             console.warn(`Элемент с ID "${id}" не найден`);
@@ -364,7 +215,120 @@ class QuizApp {
         return element;
     }
 
-    validateQuestionsDatabase() {
+    static setText(element, text) {
+        if (!element) return;
+        element.textContent = String(text);
+    }
+
+    static sanitize(text) {
+        if (typeof text !== 'string') return '';
+        return text.replace(/[<>]/g, '');
+    }
+}
+
+const THEME_KEY = 'quiz-theme';
+
+const THEME_ICONS = '<span class="theme-toggle__icon theme-toggle__moon" aria-hidden="true"></span>' +
+    '<span class="theme-toggle__icon theme-toggle__sun" aria-hidden="true"></span>';
+
+class Theme {
+    static current() {
+        if (!CONFIG.themeSwitcher) return 'dark';
+        try {
+            return localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark';
+        } catch (e) {
+            return 'dark';
+        }
+    }
+
+    static apply(theme) {
+        const root = document.documentElement;
+
+        root.classList.add('theme-switching');
+        if (theme === 'light') root.setAttribute('data-theme', 'light');
+        else root.removeAttribute('data-theme');
+        Theme.updateButton();
+        void root.offsetWidth;
+        setTimeout(() => root.classList.remove('theme-switching'), 50);
+    }
+
+    static toggle() {
+        const theme = Theme.current() === 'light' ? 'dark' : 'light';
+        try {
+            localStorage.setItem(THEME_KEY, theme);
+        } catch (e) {}
+        Theme.apply(theme);
+    }
+
+    static renderButton() {
+        if (!CONFIG.themeSwitcher) return;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'theme-toggle';
+        button.id = 'theme-toggle';
+        button.innerHTML = THEME_ICONS;
+        button.addEventListener('click', Theme.toggle);
+        document.body.prepend(button);
+        Theme.updateButton();
+    }
+
+    static updateButton() {
+        const button = document.getElementById('theme-toggle');
+        if (!button) return;
+        const light = Theme.current() === 'light';
+        button.setAttribute('aria-pressed', String(light));
+        button.setAttribute('aria-label', Translations.get(light ? 'themeDark' : 'themeLight'));
+    }
+
+    static init() {
+        Theme.apply(Theme.current());
+        window.addEventListener('pageshow', () => Theme.apply(Theme.current()));
+        window.addEventListener('storage', (e) => {
+            if (e.key === THEME_KEY) Theme.apply(Theme.current());
+        });
+    }
+}
+
+class QuizData {
+    static getCategory(key) {
+        if (typeof getCategoryByKey === 'undefined') {
+            console.error('Категория викторины не найдена.');
+            return null;
+        }
+        return getCategoryByKey(key);
+    }
+
+    static getQuestions(key) {
+        const languages = questionsDatabase[key];
+        if (!languages) return null;
+
+        const questions = languages[CURRENT_LANGUAGE_CODE];
+        if (Array.isArray(questions) && questions.length > 0) {
+            return questions;
+        }
+
+        console.warn(`Данные отсутствуют: вопросы для категории "${key}" на языке "${CURRENT_LANGUAGE_CODE}" не найдены`);
+        return null;
+    }
+
+    static shuffle(array) {
+        const result = [...array];
+        for (let i = result.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [result[i], result[j]] = [result[j], result[i]];
+        }
+        return result;
+    }
+}
+
+class DataValidator {
+    static run() {
+        DataValidator.checkQuestions();
+        DataValidator.checkCategories();
+        DataValidator.checkThemes();
+    }
+
+    static checkQuestions() {
         if (typeof questionsDatabase === 'undefined') {
             throw new Error('База данных вопросов не загружена');
         }
@@ -390,11 +354,9 @@ class QuizApp {
                 });
             });
         });
-
-        this.validateCategoriesSync();
     }
 
-    validateCategoriesSync() {
+    static checkCategories() {
         if (typeof CATEGORIES === 'undefined' || typeof questionsDatabase === 'undefined') {
             return;
         }
@@ -413,17 +375,14 @@ class QuizApp {
                 console.warn(`Категория "${key}" есть в questions.js, но не описана в categories.js — кнопка не появится на экране`);
             }
         });
-
-        this.validateThemesSync();
     }
 
-
-    validateThemesSync() {
+    static checkThemes() {
         if (typeof CATEGORIES === 'undefined' || typeof THEMES === 'undefined') {
             return;
         }
 
-        const themeIds = new Set(THEMES.map(t => t.id));
+        const themeIds = new Set(THEMES.map(theme => theme.id));
 
         CATEGORIES.forEach(category => {
             if (!Array.isArray(category.theme) || category.theme.length === 0) {
@@ -437,72 +396,54 @@ class QuizApp {
             });
         });
     }
+}
 
+class TopicMenu {
+    constructor(onCategorySelect) {
+        this.onCategorySelect = onCategorySelect;
+        this.selectedTopicId = 'all';
+        this.isOpen = false;
 
-    renderThemeMenu() {
-        if (!this.themeDrawerList) return;
+        this.burgerBtn = Dom.get('burger-btn');
+        this.drawer = Dom.get('theme-drawer');
+        this.overlay = Dom.get('theme-drawer-overlay');
+        this.closeBtn = Dom.get('theme-drawer-close');
+        this.list = Dom.get('theme-drawer-list');
+        this.categoriesContainer = Dom.get('categories-container');
+
+        this.renderMenu();
+        this.renderCategories();
+        this.bindEvents();
+    }
+
+    renderMenu() {
+        if (!this.list) return;
 
         if (typeof THEMES === 'undefined') {
             console.error('Категория не найдена.');
             return;
         }
 
-        const allItem = `
+        const allItem = this.menuItemHTML('all', Translations.get('allThemes'));
+        const topicItems = THEMES.map(theme => this.menuItemHTML(theme.id, Dom.sanitize(getThemeLabel(theme)))).join('');
+
+        this.list.innerHTML = allItem + topicItems;
+    }
+
+    menuItemHTML(id, label) {
+        const active = this.selectedTopicId === id;
+        return `
             <button
                 type="button"
-                class="theme-drawer__item${this.selectedThemeId === 'all' ? ' theme-drawer__item--active' : ''}"
-                data-theme="all"
+                class="theme-drawer__item${active ? ' theme-drawer__item--active' : ''}"
+                data-theme="${id}"
                 role="option"
-                aria-selected="${this.selectedThemeId === 'all'}"
-            >${t('allThemes')}</button>
+                aria-selected="${active}"
+            >${label}</button>
         `;
-
-        const themeItems = THEMES.map(theme => `
-            <button
-                type="button"
-                class="theme-drawer__item${this.selectedThemeId === theme.id ? ' theme-drawer__item--active' : ''}"
-                data-theme="${theme.id}"
-                role="option"
-                aria-selected="${this.selectedThemeId === theme.id}"
-            >${this.sanitizeText(getThemeLabel(theme))}</button>
-        `).join('');
-
-        this.themeDrawerList.innerHTML = allItem + themeItems;
     }
 
-    selectTheme(themeId) {
-        if (this.selectedThemeId !== themeId) {
-            this.selectedThemeId = themeId;
-            this.renderThemeMenu();
-            this.renderCategoryButtons();
-        }
-        this.closeThemeDrawer();
-    }
-
-    toggleThemeDrawer() {
-        this.isThemeDrawerOpen ? this.closeThemeDrawer() : this.openThemeDrawer();
-    }
-
-    openThemeDrawer() {
-        if (!this.themeDrawer) return;
-        this.isThemeDrawerOpen = true;
-        this.themeDrawer.classList.add('theme-drawer--open');
-        this.themeDrawerOverlay?.classList.add('theme-drawer-overlay--visible');
-        this.burgerBtn?.setAttribute('aria-expanded', 'true');
-        this.burgerBtn?.classList.add('burger-btn--active');
-    }
-
-    closeThemeDrawer() {
-        if (!this.themeDrawer) return;
-        this.isThemeDrawerOpen = false;
-        this.themeDrawer.classList.remove('theme-drawer--open');
-        this.themeDrawerOverlay?.classList.remove('theme-drawer-overlay--visible');
-        this.burgerBtn?.setAttribute('aria-expanded', 'false');
-        this.burgerBtn?.classList.remove('burger-btn--active');
-    }
-
-
-    renderCategoryButtons() {
+    renderCategories() {
         if (!this.categoriesContainer) return;
 
         if (typeof CATEGORIES === 'undefined') {
@@ -510,424 +451,386 @@ class QuizApp {
             return;
         }
 
-        const visibleCategories = this.selectedThemeId === 'all'
+        const visibleCategories = this.selectedTopicId === 'all'
             ? CATEGORIES
-            : CATEGORIES.filter(category => Array.isArray(category.theme) && category.theme.includes(this.selectedThemeId));
+            : CATEGORIES.filter(category => Array.isArray(category.theme) && category.theme.includes(this.selectedTopicId));
 
         if (visibleCategories.length === 0) {
             this.categoriesContainer.innerHTML = `
-                <p class="categories__empty">${t('emptyThemeCategories')}</p>
+                <p class="categories__empty">${Translations.get('emptyThemeCategories')}</p>
             `;
             return;
         }
 
-        const html = visibleCategories.map(category => {
-            const color = category.color || (typeof DEFAULT_CATEGORY_COLOR !== 'undefined' ? DEFAULT_CATEGORY_COLOR : '#4682B4');
-            const badge = category.isNew ? `<span class="new-badge">${t('newBadge')}</span>` : '';
-            const translated = this.getCategoryData(category.key) || category;
-            const title = translated.title || '';
-
-            return `
-                <button class="category-btn" data-category="${category.key}" style="--category-color: ${color}; border-top-color: ${color};" aria-label="${t('selectCategoryAriaLabel', { title: this.sanitizeText(title) })}">
-                    ${badge}
-                    <span class="category-btn__icon" aria-hidden="true">${category.icon}</span>
-                    <span class="category-btn__title">${this.sanitizeText(title)}</span>
-                    <br>
-                </button>
-            `;
-        }).join('');
-
-        this.categoriesContainer.innerHTML = html;
+        this.categoriesContainer.innerHTML = visibleCategories.map(category => this.categoryHTML(category)).join('');
     }
 
+    categoryHTML(category) {
+        const color = category.color || (typeof DEFAULT_CATEGORY_COLOR !== 'undefined' ? DEFAULT_CATEGORY_COLOR : '#4682B4');
+        const badge = category.isNew ? `<span class="new-badge">${Translations.get('newBadge')}</span>` : '';
+        const translated = QuizData.getCategory(category.key) || category;
+        const title = Dom.sanitize(translated.title || '');
 
-    initLanguageSelector() {
-        this.currentLanguage = LANGUAGES.find(lang => lang.code === CURRENT_LANGUAGE_CODE) || LANGUAGES[0];
-        this.renderLanguageSelector();
-    }
-
-    renderLanguageSelector() {
-        if (!this.languageSelectorToggle || !this.languageSelectorDropdown) return;
-
-        this.languageSelectorToggle.innerHTML = `
-            <span class="language-selector__code" aria-hidden="true">${this.currentLanguage.code.toUpperCase()}</span>
+        return `
+            <button class="category-btn" data-category="${category.key}" style="--category-color: ${color}; border-top-color: ${color};" aria-label="${Translations.get('selectCategoryAriaLabel', { title })}">
+                ${badge}
+                <span class="category-btn__icon" aria-hidden="true">${category.icon}</span>
+                <span class="category-btn__title">${title}</span>
+                <br>
+            </button>
         `;
-        this.languageSelectorToggle.setAttribute('aria-label', t('interfaceLanguageLabel', { name: this.currentLanguage.name }));
-
-        this.languageSelectorDropdown.innerHTML = LANGUAGES.map(lang => `
-            <a
-                href="${lang.url}"
-                class="language-option${lang.code === this.currentLanguage.code ? ' language-option--active' : ''}"
-                data-lang="${lang.code}"
-                role="option"
-                aria-selected="${lang.code === this.currentLanguage.code}"
-            >
-                <span class="language-option__code" aria-hidden="true">${lang.code.toUpperCase()}</span>
-                <span class="language-option__name">${this.sanitizeText(lang.name)}</span>
-                ${lang.code === this.currentLanguage.code ? '<span class="language-option__check" aria-hidden="true">✓</span>' : ''}
-            </a>
-        `).join('');
     }
 
-    toggleLanguageDropdown() {
-        this.isLanguageDropdownOpen ? this.closeLanguageDropdown() : this.openLanguageDropdown();
+    selectTopic(topicId) {
+        if (this.selectedTopicId !== topicId) {
+            this.selectedTopicId = topicId;
+            this.renderMenu();
+            this.renderCategories();
+        }
+        this.close();
     }
 
-    openLanguageDropdown() {
-        if (!this.languageSelectorRoot) return;
-        this.isLanguageDropdownOpen = true;
-        this.languageSelectorRoot.classList.add('language-selector--open');
-        this.languageSelectorToggle?.setAttribute('aria-expanded', 'true');
+    toggle() {
+        this.isOpen ? this.close() : this.open();
     }
 
-    closeLanguageDropdown() {
-        if (!this.languageSelectorRoot) return;
-        this.isLanguageDropdownOpen = false;
-        this.languageSelectorRoot.classList.remove('language-selector--open');
-        this.languageSelectorToggle?.setAttribute('aria-expanded', 'false');
+    open() {
+        if (!this.drawer) return;
+        this.isOpen = true;
+        this.drawer.classList.add('theme-drawer--open');
+        this.overlay?.classList.add('theme-drawer-overlay--visible');
+        this.burgerBtn?.setAttribute('aria-expanded', 'true');
+        this.burgerBtn?.classList.add('burger-btn--active');
     }
 
-    attachEventListeners() {
-        if (this.exitBtn) {
-            this.exitBtn.addEventListener('click', () => this.handleExitClick());
-        }
+    close() {
+        if (!this.drawer) return;
+        this.isOpen = false;
+        this.drawer.classList.remove('theme-drawer--open');
+        this.overlay?.classList.remove('theme-drawer-overlay--visible');
+        this.burgerBtn?.setAttribute('aria-expanded', 'false');
+        this.burgerBtn?.classList.remove('burger-btn--active');
+    }
 
-        if (this.categoriesContainer) {
+    setVisible(visible) {
+        if (!this.burgerBtn) return;
+        this.burgerBtn.classList.toggle('burger-btn--hidden', !visible);
+        if (!visible) this.close();
+    }
 
-            this.categoriesContainer.addEventListener('click', (e) => {
-                const btn = e.target.closest('.category-btn');
-                if (btn && btn.dataset.category) {
-                    this.showCategoryInfo(btn.dataset.category);
-                }
-            });
-        }
+    bindEvents() {
+        this.categoriesContainer?.addEventListener('click', (e) => {
+            const btn = e.target.closest('.category-btn');
+            if (btn && btn.dataset.category) {
+                this.onCategorySelect(btn.dataset.category);
+            }
+        });
 
-        if (this.burgerBtn) {
-            this.burgerBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.toggleThemeDrawer();
-            });
-        }
+        this.burgerBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggle();
+        });
 
-        if (this.themeDrawerClose) {
-            this.themeDrawerClose.addEventListener('click', () => this.closeThemeDrawer());
-        }
+        this.closeBtn?.addEventListener('click', () => this.close());
+        this.overlay?.addEventListener('click', () => this.close());
 
-        if (this.themeDrawerOverlay) {
-            this.themeDrawerOverlay.addEventListener('click', () => this.closeThemeDrawer());
-        }
-
-        if (this.themeDrawerList) {
-            this.themeDrawerList.addEventListener('click', (e) => {
-                const item = e.target.closest('.theme-drawer__item');
-                if (item && item.dataset.theme) {
-                    this.selectTheme(item.dataset.theme);
-                }
-            });
-        }
+        this.list?.addEventListener('click', (e) => {
+            const item = e.target.closest('.theme-drawer__item');
+            if (item && item.dataset.theme) {
+                this.selectTopic(item.dataset.theme);
+            }
+        });
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isThemeDrawerOpen) {
-                this.closeThemeDrawer();
+            if (e.key === 'Escape' && this.isOpen) {
+                this.close();
                 this.burgerBtn?.focus();
             }
         });
+    }
+}
 
-        if (this.languageSelectorToggle) {
-            this.languageSelectorToggle.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.toggleLanguageDropdown();
-            });
-        }
+class LanguageSelector {
+    constructor() {
+        this.isOpen = false;
+        this.current = LANGUAGES.find(lang => lang.code === CURRENT_LANGUAGE_CODE) || LANGUAGES[0];
 
-        if (this.languageSelectorDropdown) {
-            this.languageSelectorDropdown.addEventListener('click', (e) => {
-                const option = e.target.closest('.language-option');
-                if (!option) return;
+        this.root = Dom.get('language-selector');
+        this.toggleBtn = Dom.get('language-selector-toggle');
+        this.dropdown = Dom.get('language-selector-dropdown');
 
-                if (option.getAttribute('href') === '#') {
-                    e.preventDefault();
-                }
-                this.closeLanguageDropdown();
-            });
-        }
+        this.render();
+        this.bindEvents();
+    }
+
+    render() {
+        if (!this.toggleBtn || !this.dropdown) return;
+
+        this.toggleBtn.innerHTML = `
+            <span class="language-selector__code" aria-hidden="true">${this.current.code.toUpperCase()}</span>
+        `;
+        this.toggleBtn.setAttribute('aria-label', Translations.get('interfaceLanguageLabel', { name: this.current.name }));
+
+        this.dropdown.innerHTML = LANGUAGES.map(lang => {
+            const active = lang.code === this.current.code;
+            return `
+                <a
+                    href="${lang.url}"
+                    class="language-option${active ? ' language-option--active' : ''}"
+                    data-lang="${lang.code}"
+                    role="option"
+                    aria-selected="${active}"
+                >
+                    <span class="language-option__code" aria-hidden="true">${lang.code.toUpperCase()}</span>
+                    <span class="language-option__name">${Dom.sanitize(lang.name)}</span>
+                    ${active ? '<span class="language-option__check" aria-hidden="true">✓</span>' : ''}
+                </a>
+            `;
+        }).join('');
+    }
+
+    toggle() {
+        this.isOpen ? this.close() : this.open();
+    }
+
+    open() {
+        if (!this.root) return;
+        this.isOpen = true;
+        this.root.classList.add('language-selector--open');
+        this.toggleBtn?.setAttribute('aria-expanded', 'true');
+    }
+
+    close() {
+        if (!this.root) return;
+        this.isOpen = false;
+        this.root.classList.remove('language-selector--open');
+        this.toggleBtn?.setAttribute('aria-expanded', 'false');
+    }
+
+    setVisible(visible) {
+        if (!this.root) return;
+        this.root.classList.toggle('language-selector--hidden', !visible);
+        if (!visible) this.close();
+    }
+
+    bindEvents() {
+        this.toggleBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggle();
+        });
+
+        this.dropdown?.addEventListener('click', (e) => {
+            const option = e.target.closest('.language-option');
+            if (!option) return;
+
+            if (option.getAttribute('href') === '#') {
+                e.preventDefault();
+            }
+            this.close();
+        });
 
         document.addEventListener('click', (e) => {
-            if (this.isLanguageDropdownOpen && this.languageSelectorRoot && !this.languageSelectorRoot.contains(e.target)) {
-                this.closeLanguageDropdown();
+            if (this.isOpen && this.root && !this.root.contains(e.target)) {
+                this.close();
             }
         });
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isLanguageDropdownOpen) {
-                this.closeLanguageDropdown();
-                this.languageSelectorToggle?.focus();
+            if (e.key === 'Escape' && this.isOpen) {
+                this.close();
+                this.toggleBtn?.focus();
             }
         });
+    }
+}
 
-        if (this.categoryInfoBack) {
-            this.categoryInfoBack.addEventListener('click', () => {
-                this.showScreen(this.welcomeScreen);
-            });
-        }
+class ExitModal {
+    constructor({ onConfirm, onToggle }) {
+        this.onConfirm = onConfirm;
+        this.onToggle = onToggle;
 
-        if (this.categoryInfoStart) {
-            this.categoryInfoStart.addEventListener('click', () => {
-                if (this.selectedCategory) {
-                    this.startQuiz(this.selectedCategory);
-                }
-            });
-        }
+        this.modal = Dom.get('exit-modal');
+        this.confirmBtn = Dom.get('exit-confirm');
+        this.cancelBtn = Dom.get('exit-cancel');
 
-        if (this.backBtn) {
-            this.backBtn.addEventListener('click', () => this.goBack());
-        }
-
-        if (this.nextBtn) {
-            this.nextBtn.addEventListener('click', () => this.nextQuestion());
-        }
-
-        const playAgainBtn = this.getElement('play-again-btn');
-        if (playAgainBtn) {
-            playAgainBtn.addEventListener('click', () => {
-                this.startQuiz(this.currentCategory);
-            });
-        }
-
-        const changeCategoryBtn = this.getElement('change-category-btn');
-        if (changeCategoryBtn) {
-            changeCategoryBtn.addEventListener('click', () => {
-                this.showScreen(this.welcomeScreen);
-            });
-        }
-
-        if (this.exitConfirm) {
-            this.exitConfirm.addEventListener('click', () => {
-                this.returnToWelcomeScreen();
-            });
-        }
-
-        if (this.exitCancel) {
-            this.exitCancel.addEventListener('click', () => {
-                this.hideExitModal();
-            });
-        }
-
-        if (this.exitModal) {
-            this.exitModal.addEventListener('click', (e) => {
-                if (e.target === this.exitModal) {
-                    this.hideExitModal();
-                }
-            });
-        }
+        this.bindEvents();
     }
 
-
-    getCategoryData(category) {
-        if (typeof getCategoryByKey === 'undefined') {
-            console.error('Категория викторины не найдена.');
-            return null;
-        }
-        return getCategoryByKey(category);
+    isOpen() {
+        return Boolean(this.modal?.classList.contains('active'));
     }
 
-    getQuestionsForCategory(category) {
-        const languages = questionsDatabase[category];
-        if (!languages) return null;
-
-        const questionsForLang = languages[CURRENT_LANGUAGE_CODE];
-        if (Array.isArray(questionsForLang) && questionsForLang.length > 0) {
-            return questionsForLang;
-        }
-
-        console.warn(`Данные отсутствуют: вопросы для категории "${category}" на языке "${CURRENT_LANGUAGE_CODE}" не найдены`);
-        return null;
+    show() {
+        this.modal?.classList.add('active');
+        this.onToggle();
     }
 
-    showCategoryInfo(category) {
-        try {
-            const categoryData = this.getCategoryData(category);
+    hide() {
+        this.modal?.classList.remove('active');
+        this.onToggle();
+    }
 
-            if (!categoryData) {
-                throw new Error(`Категория "${category}" не найдена`);
+    bindEvents() {
+        this.confirmBtn?.addEventListener('click', () => this.onConfirm());
+        this.cancelBtn?.addEventListener('click', () => this.hide());
+
+        this.modal?.addEventListener('click', (e) => {
+            if (e.target === this.modal) {
+                this.hide();
             }
+        });
+    }
+}
 
-            this.safeSetText(this.categoryInfoIcon, categoryData.icon);
-            this.safeSetText(this.categoryInfoTitle, categoryData.title);
-            this.safeSetText(this.categoryInfoDescription, categoryData.description);
-            this.safeSetText(this.categoryInfoQuestions, categoryData.questions);
-            this.safeSetText(this.categoryInfoAge, categoryData.age);
+class CategoryInfoScreen {
+    constructor({ onBack, onStart }) {
+        this.element = Dom.get('category-info-screen');
+        this.selectedCategory = null;
 
-            this.selectedCategory = category;
-            this.showScreen(this.categoryInfoScreen);
-        } catch (error) {
-            this.handleError('Ошибка отображения информации о категории', error);
+        this.icon = Dom.get('category-info-icon');
+        this.title = Dom.get('category-info-title');
+        this.description = Dom.get('category-info-description');
+        this.questionsCount = Dom.get('category-info-questions');
+        this.age = Dom.get('category-info-age');
+
+        Dom.get('category-info-back')?.addEventListener('click', () => onBack());
+        Dom.get('category-info-start')?.addEventListener('click', () => {
+            if (this.selectedCategory) onStart(this.selectedCategory);
+        });
+    }
+
+    fill(categoryKey) {
+        const category = QuizData.getCategory(categoryKey);
+        if (!category) {
+            throw new Error(`Категория "${categoryKey}" не найдена`);
         }
+
+        Dom.setText(this.icon, category.icon);
+        Dom.setText(this.title, category.title);
+        Dom.setText(this.description, category.description);
+        Dom.setText(this.questionsCount, category.questions);
+        Dom.setText(this.age, category.age);
+
+        this.selectedCategory = categoryKey;
+    }
+}
+
+class QuizScreen {
+    constructor({ onFinish, onExitRequest }) {
+        this.onFinish = onFinish;
+        this.onExitRequest = onExitRequest;
+
+        this.element = Dom.get('quiz-screen');
+        this.questionText = Dom.get('question-text');
+        this.imageContainer = Dom.get('question-image-container');
+        this.answersContainer = Dom.get('answers-container');
+        this.currentQuestionSpan = Dom.get('current-question');
+        this.totalQuestionsSpan = Dom.get('total-questions');
+        this.progressFill = Dom.get('progress-fill');
+        this.nextBtn = Dom.get('next-btn');
+        this.backBtn = Dom.get('back-btn');
+
+        this.reset();
+
+        this.backBtn?.addEventListener('click', () => this.goBack());
+        this.nextBtn?.addEventListener('click', () => this.nextQuestion());
     }
 
-    handleExitClick() {
-        if (this.welcomeScreen && this.welcomeScreen.classList.contains('active')) {
-            this.exitToPortal();
-        } else {
-            this.showExitModal();
-        }
-    }
-
-    showExitModal() {
-        if (this.exitModal) {
-            this.exitModal.classList.add('active');
-        }
-        this.updateLanguageSelectorVisibility();
-    }
-
-    hideExitModal() {
-        if (this.exitModal) {
-            this.exitModal.classList.remove('active');
-        }
-        this.updateLanguageSelectorVisibility();
-    }
-
-    returnToWelcomeScreen() {
-        this.hideExitModal();
-        this.showScreen(this.welcomeScreen);
-        this.resetQuiz();
-        this.resetResultsScroll();
-    }
-
-    exitToPortal() {
-        window.location.href = this.portalUrl;
-    }
-
-    resetQuiz() {
-        this.currentCategory = null;
+    reset() {
+        this.category = null;
         this.questions = [];
-        this.currentQuestionIndex = 0;
-        this.score = 0;
-        this.correctAnswers = 0;
-        this.questionHistory = [];
+        this.currentIndex = 0;
+        this.history = [];
         this.selectedAnswers = {};
         this.confirmedAnswers = new Set();
     }
 
-    shuffleArray(array) {
-        const result = [...array];
-        for (let i = result.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [result[i], result[j]] = [result[j], result[i]];
-        }
-        return result;
-    }
-
-    startQuiz(category) {
-        try {
-            const questions = this.getQuestionsForCategory(category);
-
-            if (!questions) {
-                throw new Error(`Вопросы для категории "${category}" не найдены`);
-            }
-
-            this.currentCategory = category;
-            this.questions = this.shuffleArray(questions);
-            this.currentQuestionIndex = 0;
-            this.score = 0;
-            this.correctAnswers = 0;
-            this.questionHistory = [];
-            this.selectedAnswers = {};
-            this.confirmedAnswers = new Set();
-
-            this.safeSetText(this.totalQuestionsSpan, this.questions.length);
-
-            this.showScreen(this.quizScreen);
-            this.loadQuestion();
-        } catch (error) {
-            this.handleError('Ошибка запуска викторины', error);
-        }
+    start(category, questions) {
+        this.reset();
+        this.category = category;
+        this.questions = QuizData.shuffle(questions);
+        Dom.setText(this.totalQuestionsSpan, this.questions.length);
     }
 
     loadQuestion() {
         try {
-            const question = this.questions[this.currentQuestionIndex];
-
+            const question = this.questions[this.currentIndex];
             if (!question) {
                 throw new Error('Вопрос не найден');
             }
 
-            this.safeSetText(this.currentQuestionSpan, this.currentQuestionIndex + 1);
-            const progress = ((this.currentQuestionIndex + 1) / this.questions.length) * 100;
-            if (this.progressFill) {
-                this.progressFill.style.width = progress + '%';
-                this.progressFill.parentElement.setAttribute('aria-valuenow', Math.round(progress));
-            }
+            this.updateProgress();
+            this.loadImage(question.image);
+            this.preloadImage(this.questions[this.currentIndex + 1]?.image);
+            Dom.setText(this.questionText, question.question);
+            this.renderAnswers(question.answers);
 
-            this.loadQuestionImage(question.image);
-            this.preloadImage(this.questions[this.currentQuestionIndex + 1]?.image);
-            this.safeSetText(this.questionText, question.question);
-            this.createAnswerButtons(question.answers);
-
-            const savedAnswer = this.selectedAnswers[this.currentQuestionIndex];
-            const isConfirmed = this.confirmedAnswers.has(this.currentQuestionIndex);
-
+            const savedAnswer = this.selectedAnswers[this.currentIndex];
             if (savedAnswer !== undefined) {
-                this.restoreAnswerState(savedAnswer, isConfirmed);
+                this.restoreAnswerState(savedAnswer, this.confirmedAnswers.has(this.currentIndex));
             } else {
-                this.disableNextButton();
+                this.setNextEnabled(false);
             }
 
             this.updateBackButton();
         } catch (error) {
-            this.handleError('Ошибка загрузки вопроса', error);
+            console.error('Ошибка загрузки вопроса', error);
         }
     }
 
-    loadQuestionImage(imagePath) {
-        if (!this.questionImageContainer) return;
-
-        this.questionImageContainer.innerHTML = '';
-
-        if (imagePath) {
-            const imageWrapper = document.createElement('div');
-            imageWrapper.className = 'question-image-wrapper';
-
-            const placeholder = document.createElement('div');
-            placeholder.className = 'question-image-placeholder';
-            placeholder.innerHTML = '<div class="placeholder-spinner"></div>';
-
-            const img = document.createElement('img');
-            img.className = 'question-image';
-            img.alt = t('questionImageAlt');
-            img.style.opacity = '0';
-
-            img.onload = () => {
-
-                setTimeout(() => {
-                    img.style.opacity = '1';
-                    placeholder.style.opacity = '0';
-                    setTimeout(() => {
-                        placeholder.remove();
-                    }, 300);
-                }, 100);
-            };
-
-            img.onerror = () => {
-                console.warn(`Не удалось загрузить изображение: ${imagePath}`);
-                placeholder.innerHTML = '<div class="placeholder-error">📷</div>';
-            };
-
-            imageWrapper.appendChild(placeholder);
-            imageWrapper.appendChild(img);
-            this.questionImageContainer.appendChild(imageWrapper);
-            img.src = imagePath;
+    updateProgress() {
+        Dom.setText(this.currentQuestionSpan, this.currentIndex + 1);
+        const progress = ((this.currentIndex + 1) / this.questions.length) * 100;
+        if (this.progressFill) {
+            this.progressFill.style.width = progress + '%';
+            this.progressFill.parentElement.setAttribute('aria-valuenow', Math.round(progress));
         }
     }
 
-    // Заранее загружаем картинку следующего вопроса, чтобы не ждать её после "Далее"
+    loadImage(imagePath) {
+        if (!this.imageContainer) return;
+
+        this.imageContainer.innerHTML = '';
+        if (!imagePath) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'question-image-wrapper';
+
+        const placeholder = document.createElement('div');
+        placeholder.className = 'question-image-placeholder';
+        placeholder.innerHTML = '<div class="placeholder-spinner"></div>';
+
+        const img = document.createElement('img');
+        img.className = 'question-image';
+        img.alt = Translations.get('questionImageAlt');
+        img.style.opacity = '0';
+
+        img.onload = () => {
+            setTimeout(() => {
+                img.style.opacity = '1';
+                placeholder.style.opacity = '0';
+                setTimeout(() => placeholder.remove(), 300);
+            }, 100);
+        };
+
+        img.onerror = () => {
+            console.warn(`Не удалось загрузить изображение: ${imagePath}`);
+            placeholder.innerHTML = '<div class="placeholder-error">📷</div>';
+        };
+
+        wrapper.appendChild(placeholder);
+        wrapper.appendChild(img);
+        this.imageContainer.appendChild(wrapper);
+        img.src = imagePath;
+    }
+
     preloadImage(imagePath) {
         if (!imagePath) return;
         const img = new Image();
         img.src = imagePath;
     }
 
-    createAnswerButtons(answers) {
+    renderAnswers(answers) {
         if (!this.answersContainer) return;
 
         this.answersContainer.innerHTML = '';
@@ -943,300 +846,298 @@ class QuizApp {
             button.dataset.index = index;
             button.setAttribute('role', 'button');
             button.setAttribute('aria-label', `Ответ ${index + 1}`);
-
-            button.textContent = this.sanitizeText(answer);
-
+            button.textContent = Dom.sanitize(answer);
             button.addEventListener('click', () => this.selectAnswer(index));
             this.answersContainer.appendChild(button);
         });
     }
 
+    answerButtons() {
+        return this.answersContainer.querySelectorAll('.answer-btn');
+    }
+
     restoreAnswerState(selectedIndex, isConfirmed) {
-        try {
-            const answerButtons = this.answersContainer.querySelectorAll('.answer-btn');
+        const buttons = this.answerButtons();
 
-            answerButtons.forEach(btn => {
-                btn.classList.remove('selected');
-                if (isConfirmed) {
-                    btn.classList.add('disabled');
-                } else {
-                    btn.classList.remove('disabled');
-                }
-            });
+        buttons.forEach(btn => {
+            btn.classList.remove('selected');
+            btn.classList.toggle('disabled', isConfirmed);
+        });
 
-            if (selectedIndex !== undefined) {
-                answerButtons[selectedIndex].classList.add('selected');
-            }
-
-            this.enableNextButton();
-        } catch (error) {
-            this.handleError('Ошибка восстановления состояния ответа', error);
-        }
+        buttons[selectedIndex]?.classList.add('selected');
+        this.setNextEnabled(true);
     }
 
     selectAnswer(selectedIndex) {
-        try {
-            if (this.confirmedAnswers.has(this.currentQuestionIndex)) {
-                return;
-            }
+        if (this.confirmedAnswers.has(this.currentIndex)) return;
 
-            const answerButtons = this.answersContainer.querySelectorAll('.answer-btn');
+        this.selectedAnswers[this.currentIndex] = selectedIndex;
 
-            this.selectedAnswers[this.currentQuestionIndex] = selectedIndex;
+        const buttons = this.answerButtons();
+        buttons.forEach(btn => btn.classList.remove('selected'));
+        buttons[selectedIndex].classList.add('selected');
 
-            answerButtons.forEach(btn => {
-                btn.classList.remove('selected');
-            });
-
-            answerButtons[selectedIndex].classList.add('selected');
-
-            setTimeout(() => {
-                this.enableNextButton();
-            }, 300);
-
-        } catch (error) {
-            this.handleError('Ошибка выбора ответа', error);
-        }
+        setTimeout(() => this.setNextEnabled(true), 300);
     }
+
     nextQuestion() {
-        try {
-            this.confirmedAnswers.add(this.currentQuestionIndex);
+        this.confirmedAnswers.add(this.currentIndex);
+        this.history.push(this.currentIndex);
+        this.currentIndex++;
 
-            this.questionHistory.push(this.currentQuestionIndex);
-            this.currentQuestionIndex++;
-
-            if (this.currentQuestionIndex < this.questions.length) {
-                this.loadQuestion();
-            } else {
-                this.showResults();
-            }
-        } catch (error) {
-            this.handleError('Ошибка перехода к следующему вопросу', error);
-        }
-    }
-    goBack() {
-        if (this.questionHistory.length > 0) {
-            this.currentQuestionIndex = this.questionHistory.pop();
+        if (this.currentIndex < this.questions.length) {
             this.loadQuestion();
         } else {
-            this.showExitModal();
+            this.onFinish();
         }
     }
+
+    goBack() {
+        if (this.history.length > 0) {
+            this.currentIndex = this.history.pop();
+            this.loadQuestion();
+        } else {
+            this.onExitRequest();
+        }
+    }
+
     updateBackButton() {
         if (!this.backBtn) return;
+        this.backBtn.style.opacity = this.history.length === 0 ? '0.5' : '1';
+    }
 
-        if (this.questionHistory.length === 0) {
-            this.backBtn.style.opacity = '0.5';
-        } else {
-            this.backBtn.style.opacity = '1';
+    setNextEnabled(enabled) {
+        if (!this.nextBtn) return;
+        this.nextBtn.classList.toggle('active', enabled);
+        this.nextBtn.disabled = !enabled;
+    }
+}
+
+class ResultsScreen {
+    constructor({ onPlayAgain, onChooseAnother }) {
+        this.element = Dom.get('results-screen');
+        this.icon = Dom.get('results-icon');
+        this.title = Dom.get('results-title');
+        this.message = Dom.get('results-message');
+        this.scoreSpan = Dom.get('final-score');
+        this.correctSpan = Dom.get('correct-count');
+        this.incorrectSpan = Dom.get('incorrect-count');
+        this.percentageSpan = Dom.get('percentage');
+        this.questionsList = Dom.get('results-questions-list');
+
+        Dom.get('play-again-btn')?.addEventListener('click', () => onPlayAgain());
+        Dom.get('change-category-btn')?.addEventListener('click', () => onChooseAnother());
+    }
+
+    render(questions, selectedAnswers) {
+        const correctCount = questions.filter((question, index) => selectedAnswers[index] === question.correct).length;
+        const percentage = Math.round((correctCount / questions.length) * 100);
+
+        Dom.setText(this.scoreSpan, correctCount * 10);
+        Dom.setText(this.correctSpan, correctCount);
+        Dom.setText(this.incorrectSpan, questions.length - correctCount);
+        Dom.setText(this.percentageSpan, percentage + '%');
+
+        this.renderSummary(percentage);
+        this.renderQuestionsList(questions, selectedAnswers);
+        this.resetScroll();
+    }
+
+    renderSummary(percentage) {
+        let level;
+        if (percentage >= 90) level = { icon: '🏆', key: 'Excellent' };
+        else if (percentage >= 70) level = { icon: '🌟', key: 'Great' };
+        else if (percentage >= 50) level = { icon: '👍', key: 'Good' };
+        else level = { icon: '💪', key: 'Low' };
+
+        Dom.setText(this.icon, level.icon);
+        Dom.setText(this.title, Translations.get(`result${level.key}Title`));
+        Dom.setText(this.message, Translations.get(`result${level.key}Message`));
+    }
+
+    renderQuestionsList(questions, selectedAnswers) {
+        if (!this.questionsList) return;
+
+        this.questionsList.innerHTML = '';
+        this.resetScroll();
+
+        questions.forEach((question, index) => {
+            this.questionsList.appendChild(this.questionItem(question, index, selectedAnswers[index]));
+        });
+
+        setTimeout(() => this.resetScroll(), 100);
+    }
+
+    questionItem(question, index, userAnswer) {
+        const isCorrect = userAnswer === question.correct;
+        const userAnswerText = userAnswer !== undefined ? question.answers[userAnswer] : Translations.get('notAnswered');
+        const correctAnswerText = question.answers[question.correct];
+
+        const item = document.createElement('div');
+        item.className = `results-question-item ${isCorrect ? 'correct' : 'incorrect'}`;
+
+        const header = document.createElement('div');
+        header.className = 'question-header';
+        header.innerHTML = `
+            <span class="question-number">${Translations.get('questionNumberLabel', { number: index + 1 })}</span>
+            <span class="question-status ${isCorrect ? 'correct' : 'incorrect'}">
+                ${isCorrect ? Translations.get('correctStatus') : Translations.get('incorrectStatus')}
+            </span>
+        `;
+
+        const text = document.createElement('div');
+        text.className = 'question-text';
+        text.textContent = Dom.sanitize(question.question);
+
+        const answers = document.createElement('div');
+        answers.className = 'answers-container';
+        answers.appendChild(this.answerRow('user-answer', Translations.get('yourAnswerLabel'), userAnswerText));
+
+        if (!isCorrect) {
+            answers.appendChild(this.answerRow('correct-answer', Translations.get('correctAnswerLabel'), correctAnswerText));
+        }
+
+        if (question.explanation) {
+            const explanation = document.createElement('div');
+            explanation.className = 'explanation-row';
+            explanation.innerHTML = `
+                <span class="explanation-icon">ⓘ</span>
+                <span class="explanation-text">${Dom.sanitize(question.explanation)}</span>
+            `;
+            answers.appendChild(explanation);
+        }
+
+        item.appendChild(header);
+        item.appendChild(text);
+        item.appendChild(answers);
+        return item;
+    }
+
+    answerRow(modifier, label, value) {
+        const row = document.createElement('div');
+        row.className = `answer-row ${modifier}`;
+        row.innerHTML = `
+            <span class="answer-label">${label}</span>
+            <span class="answer-value">${Dom.sanitize(value)}</span>
+        `;
+        return row;
+    }
+
+    resetScroll() {
+        if (!this.questionsList) return;
+        this.questionsList.scrollTop = 0;
+        requestAnimationFrame(() => {
+            this.questionsList.scrollTop = 0;
+        });
+    }
+}
+
+class QuizApp {
+    constructor() {
+        try {
+            Translations.applyToPage();
+
+            this.welcomeScreen = Dom.get('welcome-screen');
+            this.exitBtn = Dom.get('exit-btn');
+
+            this.themeToggle = document.getElementById('theme-toggle');
+
+            this.topicMenu = new TopicMenu(category => this.openCategory(category));
+            this.languageSelector = new LanguageSelector();
+            this.exitModal = new ExitModal({
+                onConfirm: () => this.returnToWelcome(),
+                onToggle: () => this.updateHeaderControls()
+            });
+            this.categoryInfo = new CategoryInfoScreen({
+                onBack: () => this.showScreen(this.welcomeScreen),
+                onStart: category => this.startQuiz(category)
+            });
+            this.quiz = new QuizScreen({
+                onFinish: () => this.showResults(),
+                onExitRequest: () => this.exitModal.show()
+            });
+            this.results = new ResultsScreen({
+                onPlayAgain: () => this.startQuiz(this.quiz.category),
+                onChooseAnother: () => this.showScreen(this.welcomeScreen)
+            });
+
+            this.exitBtn?.addEventListener('click', () => this.handleExitClick());
+
+            this.updateHeaderControls();
+            DataValidator.run();
+        } catch (error) {
+            console.error('Ошибка инициализации приложения', error);
         }
     }
 
-    enableNextButton() {
-        if (!this.nextBtn) return;
-
-        this.nextBtn.classList.add('active');
-        this.nextBtn.disabled = false;
+    openCategory(category) {
+        try {
+            this.categoryInfo.fill(category);
+            this.showScreen(this.categoryInfo.element);
+        } catch (error) {
+            console.error('Ошибка отображения информации о категории', error);
+        }
     }
 
-    disableNextButton() {
-        if (!this.nextBtn) return;
+    startQuiz(category) {
+        try {
+            const questions = QuizData.getQuestions(category);
+            if (!questions) {
+                throw new Error(`Вопросы для категории "${category}" не найдены`);
+            }
 
-        this.nextBtn.classList.remove('active');
-        this.nextBtn.disabled = true;
+            this.quiz.start(category, questions);
+            this.showScreen(this.quiz.element);
+            this.quiz.loadQuestion();
+        } catch (error) {
+            console.error('Ошибка запуска викторины', error);
+        }
     }
 
     showResults() {
         try {
-            this.correctAnswers = 0;
-            this.score = 0;
-
-            this.questions.forEach((question, index) => {
-                const userAnswer = this.selectedAnswers[index];
-                if (userAnswer === question.correct) {
-                    this.correctAnswers++;
-                    this.score += 10;
-                }
-            });
-            const percentage = Math.round((this.correctAnswers / this.questions.length) * 100);
-            const incorrectAnswers = this.questions.length - this.correctAnswers;
-            this.safeSetText(this.finalScoreSpan, this.score);
-            this.safeSetText(this.correctCountSpan, this.correctAnswers);
-            this.safeSetText(this.incorrectCountSpan, incorrectAnswers);
-            this.safeSetText(this.percentageSpan, percentage + '%');
-            this.setResultsContent(percentage);
-            this.createQuestionsList();
-            this.resetResultsScroll();
-
-            this.showScreen(this.resultsScreen);
+            this.results.render(this.quiz.questions, this.quiz.selectedAnswers);
+            this.showScreen(this.results.element);
         } catch (error) {
-            this.handleError('Ошибка отображения результатов', error);
+            console.error('Ошибка отображения результатов', error);
         }
     }
 
-    resetResultsScroll() {
-        try {
-            if (this.resultsQuestionsList) {
-                this.resultsQuestionsList.scrollTop = 0;
-
-                requestAnimationFrame(() => {
-                    this.resultsQuestionsList.scrollTop = 0;
-                });
-            }
-        } catch (error) {
-            console.warn('Ошибка сброса скролла результатов:', error);
-        }
-    }
-    setResultsContent(percentage) {
-        let icon, title, message;
-
-        if (percentage >= 90) {
-            icon = '🏆';
-            title = t('resultExcellentTitle');
-            message = t('resultExcellentMessage');
-        } else if (percentage >= 70) {
-            icon = '🌟';
-            title = t('resultGreatTitle');
-            message = t('resultGreatMessage');
-        } else if (percentage >= 50) {
-            icon = '👍';
-            title = t('resultGoodTitle');
-            message = t('resultGoodMessage');
+    handleExitClick() {
+        if (this.welcomeScreen?.classList.contains('active')) {
+            window.location.href = CONFIG.portalUrl;
         } else {
-            icon = '💪';
-            title = t('resultLowTitle');
-            message = t('resultLowMessage');
+            this.exitModal.show();
         }
-
-        this.safeSetText(this.resultsIcon, icon);
-        this.safeSetText(this.resultsTitle, title);
-        this.safeSetText(this.resultsMessage, message);
     }
 
-    createQuestionsList() {
-        if (!this.resultsQuestionsList) return;
-        this.resultsQuestionsList.innerHTML = '';
-        this.resetResultsScroll();
-        this.questions.forEach((question, index) => {
-            const userAnswer = this.selectedAnswers[index];
-            const isCorrect = userAnswer === question.correct;
-            const userAnswerText = userAnswer !== undefined ? question.answers[userAnswer] : t('notAnswered');
-            const correctAnswerText = question.answers[question.correct];
-
-            const questionItem = document.createElement('div');
-            questionItem.className = `results-question-item ${isCorrect ? 'correct' : 'incorrect'}`;
-
-            const questionHeader = document.createElement('div');
-            questionHeader.className = 'question-header';
-            questionHeader.innerHTML = `
-                <span class="question-number">${t('questionNumberLabel', { number: index + 1 })}</span>
-                <span class="question-status ${isCorrect ? 'correct' : 'incorrect'}">
-                    ${isCorrect ? t('correctStatus') : t('incorrectStatus')}
-                </span>
-            `;
-
-            const questionTextDiv = document.createElement('div');
-            questionTextDiv.className = 'question-text';
-            questionTextDiv.textContent = this.sanitizeText(question.question);
-
-            const answersContainer = document.createElement('div');
-            answersContainer.className = 'answers-container';
-
-            const userAnswerDiv = document.createElement('div');
-            userAnswerDiv.className = 'answer-row user-answer';
-            userAnswerDiv.innerHTML = `
-                <span class="answer-label">${t('yourAnswerLabel')}</span>
-                <span class="answer-value">${this.sanitizeText(userAnswerText)}</span>
-            `;
-            answersContainer.appendChild(userAnswerDiv);
-
-            if (!isCorrect) {
-                const correctAnswerDiv = document.createElement('div');
-                correctAnswerDiv.className = 'answer-row correct-answer';
-                correctAnswerDiv.innerHTML = `
-                    <span class="answer-label">${t('correctAnswerLabel')}</span>
-                    <span class="answer-value">${this.sanitizeText(correctAnswerText)}</span>
-                `;
-                answersContainer.appendChild(correctAnswerDiv);
-            }
-
-            // Пояснение
-            if (question.explanation) {
-                const explanationDiv = document.createElement('div');
-                explanationDiv.className = 'explanation-row';
-                explanationDiv.innerHTML = `
-                    <span class="explanation-icon">ⓘ</span>
-                    <span class="explanation-text">${this.sanitizeText(question.explanation)}</span>
-                `;
-                answersContainer.appendChild(explanationDiv);
-            }
-
-            questionItem.appendChild(questionHeader);
-            questionItem.appendChild(questionTextDiv);
-            questionItem.appendChild(answersContainer);
-
-            this.resultsQuestionsList.appendChild(questionItem);
-        });
-        setTimeout(() => {
-            this.resetResultsScroll();
-        }, 100);
+    returnToWelcome() {
+        this.exitModal.hide();
+        this.showScreen(this.welcomeScreen);
+        this.quiz.reset();
+        this.results.resetScroll();
     }
 
     showScreen(screen) {
         if (!screen) return;
 
-        try {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            screen.classList.add('active');
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        screen.classList.add('active');
 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            if (screen !== this.resultsScreen) {
-                this.resetResultsScroll();
-            }
-
-            this.updateLanguageSelectorVisibility();
-        } catch (error) {
-            this.handleError('Ошибка переключения экрана', error);
-        }
-    }
-
-
-    updateLanguageSelectorVisibility() {
-        const exitModalOpen = this.exitModal?.classList.contains('active');
-        const isWelcomeScreen = this.welcomeScreen?.classList.contains('active');
-        const shouldShow = isWelcomeScreen && !exitModalOpen;
-
-        if (this.languageSelectorRoot) {
-            this.languageSelectorRoot.classList.toggle('language-selector--hidden', !shouldShow);
-            if (!shouldShow) {
-                this.closeLanguageDropdown();
-            }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (screen !== this.results.element) {
+            this.results.resetScroll();
         }
 
-        if (this.burgerBtn) {
-            this.burgerBtn.classList.toggle('burger-btn--hidden', !shouldShow);
-            if (!shouldShow) {
-                this.closeThemeDrawer();
-            }
-        }
-
-        if (this.themeToggle) {
-            this.themeToggle.classList.toggle('theme-toggle--hidden', !shouldShow);
-        }
+        this.updateHeaderControls();
     }
 
-    safeSetText(element, text) {
-        if (!element) return;
-        element.textContent = String(text);
-    }
+    updateHeaderControls() {
+        const visible = Boolean(this.welcomeScreen?.classList.contains('active')) && !this.exitModal.isOpen();
 
-    sanitizeText(text) {
-        if (typeof text !== 'string') return '';
-        return text.replace(/[<>]/g, '');
-    }
-
-    handleError(message, error) {
-        console.error(message, error);
+        this.languageSelector.setVisible(visible);
+        this.topicMenu.setVisible(visible);
+        this.themeToggle?.classList.toggle('theme-toggle--hidden', !visible);
     }
 }
 
