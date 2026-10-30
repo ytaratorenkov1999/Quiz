@@ -53,7 +53,6 @@ html[data-theme="light"] .exit-btn:hover {
 
 html[data-theme="light"] .burger-btn:hover,
 html[data-theme="light"] .burger-btn--active,
-html[data-theme="light"] .theme-toggle:hover,
 html[data-theme="light"] .language-selector__toggle:hover,
 html[data-theme="light"] .language-selector--open .language-selector__toggle {
     background: var(--light-main-bg-strong);
@@ -68,6 +67,15 @@ html[data-theme="light"] .burger-btn__line {
 html[data-theme="light"] .burger-btn:hover .burger-btn__line,
 html[data-theme="light"] .burger-btn--active .burger-btn__line {
     background: var(--light-main-accent);
+}
+
+/* Как в style.css: подсветка кнопки темы только для мыши, на телефоне она залипает после нажатия */
+@media (hover: hover) {
+    html[data-theme="light"] .theme-toggle:hover {
+        background: var(--light-main-bg-strong);
+        border-color: var(--light-main-accent);
+        color: var(--light-main-text);
+    }
 }
 
 /* В светлой теме показываем луну (включить тёмную) */
@@ -299,6 +307,23 @@ html[data-theme="light"] .stat-card {
     border-color: var(--light-line);
 }
 
+/* Иконки статистики: размеры общие в style.css, здесь только бледные подложки под светлый фон */
+html[data-theme="light"] .stat-card-score .stat-card-icon {
+    background: #fef3c7;
+}
+
+html[data-theme="light"] .stat-card-percentage .stat-card-icon {
+    background: #dbeafe;
+}
+
+html[data-theme="light"] .stat-card-correct .stat-card-icon {
+    background: #d1fae5;
+}
+
+html[data-theme="light"] .stat-card-incorrect .stat-card-icon {
+    background: #fee2e2;
+}
+
 html[data-theme="light"] .stat-card:hover {
     box-shadow: 0 12px 24px rgba(15, 40, 80, 0.1);
 }
@@ -320,16 +345,8 @@ html[data-theme="light"] .results-questions-list::-webkit-scrollbar-thumb:hover 
     background: rgba(15, 23, 42, 0.3);
 }
 
+/* Линии между вопросами разбора (раскладка в style.css) */
 html[data-theme="light"] .results-question-item {
-    background: #ffffff;
-    border-color: var(--light-line);
-}
-
-html[data-theme="light"] .results-question-item:hover {
-    background: #f8fafc;
-}
-
-html[data-theme="light"] .question-header {
     border-bottom-color: var(--light-line);
 }
 

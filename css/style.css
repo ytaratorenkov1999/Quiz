@@ -213,11 +213,14 @@ body {
     z-index: 1000;
 }
 
-.theme-toggle:hover {
-    background: rgba(0, 206, 209, 0.15);
-    border-color: var(--accent);
-    color: var(--accent);
-    transform: rotate(-20deg);
+/* Только для мыши: на телефоне :hover «залипает» после нажатия и кнопка остаётся подсвеченной */
+@media (hover: hover) {
+    .theme-toggle:hover {
+        background: rgba(0, 206, 209, 0.15);
+        border-color: var(--accent);
+        color: var(--accent);
+        transform: rotate(-20deg);
+    }
 }
 
 /* Иконки из images/svg подключены маской: так они красятся цветом кнопки (color) в обеих темах и при наведении */
@@ -794,11 +797,7 @@ html.theme-switching *::after {
     margin-bottom: 24px;
 }
 
-/* Все картинки вопросов 1280x320: место под них резервируется сразу (aspect-ratio),
-   чтобы текст вопроса не сдвигался после загрузки. Без тени и без transition по opacity:
-   картинка не должна становиться отдельным композитным слоем, который перекрывает текст, —
-   иначе iOS Safari во время анимации появления экрана не дорисовывает строку вопроса.
-   Плавность даёт исчезающий поверх неё плейсхолдер */
+
 .question-image {
     width: 100%;
     max-width: 100%;
@@ -1129,31 +1128,34 @@ html.theme-switching *::after {
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
 }
 
+/* Иконки статистики: небольшие, на полупрозрачной подложке своего цвета, чтобы не перетягивали внимание */
 .stat-card-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8em;
+    font-size: 1.2em;
     flex-shrink: 0;
 }
 
 .stat-card-score .stat-card-icon {
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    background: rgba(251, 191, 36, 0.16);
 }
 
 .stat-card-correct .stat-card-icon {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: rgba(16, 185, 129, 0.16);
+    color: var(--ok);
 }
 
 .stat-card-incorrect .stat-card-icon {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    background: rgba(239, 68, 68, 0.16);
+    color: var(--err);
 }
 
 .stat-card-percentage .stat-card-icon {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    background: rgba(59, 130, 246, 0.18);
 }
 
 .stat-card-content {
@@ -1175,12 +1177,13 @@ html.theme-switching *::after {
     letter-spacing: 0.5px;
 }
 
-/* ДЕТАЛЬНАЯ РАЗБИВКА */
+/* ДЕТАЛЬНАЯ РАЗБИВКА: одна внешняя рамка, а вопросы внутри — сплошным списком через линии,
+   без своих карточек, чтобы текст не ужимался двойными рамками и отступами */
 .results-details {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
-    padding: 24px;
+    padding: 20px 18px;
     margin-bottom: 32px;
 }
 
@@ -1195,7 +1198,7 @@ html.theme-switching *::after {
 .results-questions-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 0;
     max-height: 500px;
     overflow-y: auto;
     padding-right: 8px;
@@ -1221,10 +1224,8 @@ html.theme-switching *::after {
 
 /* КАРТОЧКА ВОПРОСА */
 .results-question-item {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 16px 0;
     transition: var(--transition);
     animation: fadeInLeft 0.4s ease forwards;
     opacity: 0;
@@ -1249,9 +1250,14 @@ html.theme-switching *::after {
     }
 }
 
-.results-question-item:hover {
-    background: rgba(255, 255, 255, 0.06);
-    transform: translateX(4px);
+/* Первый и последний вопрос без лишних отступов и линии снаружи списка */
+.results-question-item:first-child {
+    padding-top: 0;
+}
+
+.results-question-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
 }
 
 
@@ -1259,9 +1265,7 @@ html.theme-switching *::after {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 8px;
 }
 
 .question-number {
@@ -1560,9 +1564,9 @@ html.theme-switching *::after {
     }
 
     .stat-card-icon {
-        width: 52px;
-        height: 52px;
-        font-size: 1.7em;
+        width: 40px;
+        height: 40px;
+        font-size: 1.2em;
     }
 
     .stat-card-value {
@@ -1590,7 +1594,7 @@ html.theme-switching *::after {
     }
 
     .results-details {
-        padding: 20px;
+        padding: 20px 18px;
         margin-bottom: 28px;
     }
 
@@ -1604,7 +1608,7 @@ html.theme-switching *::after {
     }
 
     .results-question-item {
-        padding: 16px;
+        padding: 16px 0;
     }
 
     .question-header {
@@ -1792,9 +1796,9 @@ html.theme-switching *::after {
     }
 
     .stat-card-icon {
-        width: 46px;
-        height: 46px;
-        font-size: 1.5em;
+        width: 36px;
+        height: 36px;
+        font-size: 1.1em;
     }
 
     .stat-card-value {
@@ -1806,7 +1810,7 @@ html.theme-switching *::after {
     }
 
     .results-details {
-        padding: 18px;
+        padding: 18px 14px;
         margin-bottom: 24px;
     }
 
@@ -1820,7 +1824,7 @@ html.theme-switching *::after {
     }
 
     .results-question-item {
-        padding: 14px;
+        padding: 14px 0;
     }
 
 
@@ -1828,7 +1832,6 @@ html.theme-switching *::after {
         flex-direction: row;
         align-items: center;
         gap: 6px;
-        padding-bottom: 10px;
         text-align: left;
     }
 
@@ -2008,9 +2011,9 @@ html.theme-switching *::after {
     }
 
     .stat-card-icon {
-        width: 42px;
-        height: 42px;
-        font-size: 1.4em;
+        width: 34px;
+        height: 34px;
+        font-size: 1.05em;
     }
 
     .stat-card-value {
@@ -2022,7 +2025,7 @@ html.theme-switching *::after {
     }
 
     .results-details {
-        padding: 16px;
+        padding: 16px 12px;
         margin-bottom: 20px;
     }
 
@@ -2036,7 +2039,7 @@ html.theme-switching *::after {
     }
 
     .results-question-item {
-        padding: 12px;
+        padding: 12px 0;
     }
 
 
@@ -2243,9 +2246,9 @@ html.theme-switching *::after {
     }
 
     .stat-card-icon {
-        width: 36px;
-        height: 36px;
-        font-size: 1.2em;
+        width: 32px;
+        height: 32px;
+        font-size: 1em;
     }
 
     .stat-card-value {
@@ -2257,7 +2260,7 @@ html.theme-switching *::after {
     }
 
     .results-details {
-        padding: 16px;
+        padding: 14px 12px;
         margin-bottom: 16px;
     }
 
@@ -2271,7 +2274,7 @@ html.theme-switching *::after {
     }
 
     .results-question-item {
-        padding: 10px;
+        padding: 10px 0;
     }
 
     .question-header {
