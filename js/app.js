@@ -1,5 +1,5 @@
 const CONFIG = {
-    themeSwitcher: false,
+    themeSwitcher: true,
     portalUrl: '/'
 };
 
