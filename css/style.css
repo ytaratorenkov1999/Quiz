@@ -709,21 +709,23 @@ body {
     margin-bottom: 24px;
 }
 
+/* Все картинки вопросов 1280x320: место под них резервируется сразу (aspect-ratio),
+   чтобы текст вопроса не сдвигался после загрузки. Тень не должна доставать
+   до текста (меньше margin-bottom контейнера) — иначе iOS Safari может не дорисовать строку */
 .question-image {
     width: 100%;
     max-width: 100%;
     height: auto;
+    aspect-ratio: auto 4 / 1;
     max-height: 400px;
     object-fit: contain;
     border-radius: 16px;
     display: block;
     margin: 0 auto;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
     border: 2px solid rgba(255, 255, 255, 0.1);
     /* Плавное появление изображения */
     transition: opacity 0.5s ease;
-    position: relative;
-    z-index: 1;
 }
 
 .question {
@@ -938,9 +940,9 @@ body {
 /* ============================================
    ЭКРАН РЕЗУЛЬТАТОВ
    ============================================ */
+/* Без backdrop-filter — по той же причине, что и у #quiz-screen */
 #results-screen {
     background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-    backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--border-radius);
     padding: 48px 40px;
@@ -2292,7 +2294,6 @@ html, body {
 .question-image-wrapper {
     position: relative;
     width: 100%;
-    min-height: 300px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2338,10 +2339,6 @@ html, body {
         height: 52px;
         font-size: 1.1em;
     }
-
-    .question-image-wrapper {
-        min-height: 150px;
-    }
 }
 
 @media (max-width: 480px) {
@@ -2349,10 +2346,6 @@ html, body {
         width: 48px;
         height: 48px;
         font-size: 1em;
-    }
-
-    .question-image-wrapper {
-        min-height: 80px;
     }
 }
 

@@ -782,6 +782,7 @@ class QuizApp {
             }
 
             this.loadQuestionImage(question.image);
+            this.preloadImage(this.questions[this.currentQuestionIndex + 1]?.image);
             this.safeSetText(this.questionText, question.question);
             this.createAnswerButtons(question.answers);
 
@@ -816,7 +817,6 @@ class QuizApp {
             const img = document.createElement('img');
             img.className = 'question-image';
             img.alt = t('questionImageAlt');
-            img.loading = 'lazy';
             img.style.opacity = '0';
 
             img.onload = () => {
@@ -840,6 +840,13 @@ class QuizApp {
             this.questionImageContainer.appendChild(imageWrapper);
             img.src = imagePath;
         }
+    }
+
+    // Заранее загружаем картинку следующего вопроса, чтобы не ждать её после "Далее"
+    preloadImage(imagePath) {
+        if (!imagePath) return;
+        const img = new Image();
+        img.src = imagePath;
     }
 
     createAnswerButtons(answers) {
